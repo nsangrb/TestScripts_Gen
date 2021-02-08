@@ -7,6 +7,8 @@ window.addEventListener("DOMContentLoaded", () => {
   new customTitlebar.Titlebar({
     backgroundColor: customTitlebar.Color.fromHex("#252526"),
     icon: url.format(path.join(__dirname, "/assets/img", "/icon.png")),
+    shadow: true,
+    itemBackgroundColor: customTitlebar.Color.fromHex("#2195f3a9"),
   });
 
   const replaceText = (selector, text) => {
