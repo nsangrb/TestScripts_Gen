@@ -6,9 +6,9 @@ let win;
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1000,
+    width: 1200,
     height: 800,
-    frame: false,
+    //frame: false,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -25,9 +25,9 @@ function createWindow() {
     {
       label: "Menu",
       submenu: [
-        { label: "Adjust Notification Value" },
+        { label: "Theme", submenu: [{ label: "Dark" }, { label: "Lght" }] },
         {
-          label: "CoinMarketCap",
+          label: "About",
           click() {
             shell.openPath("C:\\");
           },
