@@ -23,8 +23,10 @@
                     <div class="selection_row">
                         <div class="dropdownlist" id="filetoload_drd">
                             <div>
-                                <input type="text" placeholder="Input path..." id="excel_path" class="dropdown_input"
+                                <input type="text" placeholder="Input path..." id="excel_path_input" class="dropdown_input"
                                     onkeyup="filterFunction()">
+                                    <div class="dropdown_container" id="excel_path_container"  onmouseenter="CheckHover_Dropdowncontainer(true)"  onmouseleave="CheckHover_Dropdowncontainer(false)">                                       
+                                    </div>
                             </div>
                             <div>
                                 <button class="drd_btn" id="ExcelPath_drd_btn"></button>
@@ -43,8 +45,10 @@
                     <div class="selection_row">
                         <div class="dropdownlist" id="genTo_drd">
                             <div>
-                                <input type="text" placeholder="Input path..." id="gento_path" class="dropdown_input"
-                                    onkeyup="filterFunction()">
+                                <input type="text" placeholder="Input path..." id="gento_path_input" class="dropdown_input"
+                                    onkeydown="filterFunction(event)">
+                                    <div class="dropdown_container" id="gento_path_container"  onmouseenter="CheckHover_Dropdowncontainer(true)"  onmouseleave="CheckHover_Dropdowncontainer(false)">                                       
+                                    </div>
                             </div>
                             <div>
                                 <button class="drd_btn" id="GenTo_drd_btn"></button>
