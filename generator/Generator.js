@@ -1,0 +1,1067 @@
+const packages = require("fs");
+const path = require("path");
+import {
+  clone,
+  Get_increase,
+  Get_decrease,
+  Difference,
+  IsDefined,
+  IsString,
+  IsNumber,
+  ReplaceGlobally,
+  Check_Array,
+} from "./Other_Function.js";
+import {
+  split_TestScript_func,
+  getTestGroup,
+  getTestSubGroup,
+  getAllKeyWords,
+  getAllGroup_func,
+} from "./Collect_TestScript_Information.js";
+import {
+  TestId,
+  Test_Descr,
+  Directive,
+  Signal1,
+  Signal2,
+  Operand,
+  Value,
+  Options,
+  Line,
+  Testmatrix_args_template,
+  StructTestMatrix_template,
+  Testscript_split_region,
+  Regression_region,
+} from "./Config.js";
+
+export { TestScript, Genarate_TestScript, Update_Dict, Update_OverviewInfo };
+
+String.prototype.ReplaceGlobally = ReplaceGlobally;
+Number.prototype.Get_decrease = Get_decrease;
+
+const { readFileSync, writeFile } = packages;
+
+const testmatrix_default = {
+  teststepsubsection: "",
+  textwhenbppassed: "OK",
+  textwhenbpfailed: "NOT ok",
+  setbpfunction: "",
+  setsourcetestpoint: "",
+  sourcetestpointpos: "0",
+  setbpline: "0",
+  setbpfile: "",
+  setnegativebpline: "0",
+  setnegativebpfile: "",
+  microstep_en: "en_MSCompleteTeststep",
+};
+
+const List_replace_keywords = [
+  "%NAME%",
+  "%REQUIREMENT%",
+  "%TEST_DESCR%",
+  "%AUTHOR%",
+  "%REPORT_PATH%",
+  "%DATE%",
+  "%RELEASE%",
+  "%REGRESSION%",
+  "%INCLUDES%",
+  "%GLOBAL_VARS%",
+  "%INTERNAL_VARS%",
+  "%TEST_MATRIX%",
+  "%TEST_REGION%",
+];
+
+const List_Overview_Info = {
+  Component: "",
+  "Component Shortcut": "",
+  Author: "",
+  Output: "",
+  Report: "",
+  Date: "",
+  Release: "",
+};
+
+let Dicts = [];
+let Struct_Dict = [];
+let Enum_Dict = [];
+let Compare_Dict = [];
+
+//#region INCLUDES GENERATOR
+function includes_gen(data) {
+  let includes = "";
+  let err = "";
+  for (var index in data) {
+    let item = data[index];
+    try {
+      if (item[Directive].toLowerCase() === "include") {
+        if (IsDefined(item[Value])) {
+          includes += "\t#include " + item[Value] + "\r\n";
+        } else {
+          err +=
+            "Line " +
+            item[Line] +
+            ": Please include your path when using '#include'\r\n";
+          continue;
+        }
+      } else {
+        err +=
+          "Line " +
+          item[Line] +
+          ": Please use Directive 'include' when using '#include'\r\n";
+        continue;
+      }
+    } catch (e) {
+      err += ["", "Line " + item[Line] + ": " + e.toString() + "\r\n"];
+    }
+  }
+  return [includes, err];
+}
+
+//#endregion
+//#region DESCR GENERATOR
+function testdescr_gen(data) {
+  let testdescr = "";
+  let err = "";
+  if (data.length > 1)
+    return [testdescr, "Testcase has to have only 1 test descr.\r\n"];
+  for (var index in data) {
+    let item = data[index];
+    if (IsDefined(item[Test_Descr])) {
+      testdescr += item[Test_Descr].replace(/\r\n/g, " ");
+    } else {
+      err +=
+        "Line " +
+        item[Line] +
+        ": Please define Test descr in field 'Test Step Descriptions and Comments'\r\n";
+      continue;
+    }
+  }
+  return [testdescr, err];
+}
+//#endregion
+//#region TESTMATRIX GENERATOR
+function testmatrix_gen(data) {
+  let testmatrix = "";
+  let err = "";
+  let testmatrix_st_array = [];
+  let list_of_index_testmatrix = split_TestScript_func(getAllKeyWords, [
+    data,
+    Directive,
+    true,
+  ]);
+  let testmatrix_args_template = Testmatrix_args_template;
+  let testmatrix_struct_template = StructTestMatrix_template;
+  list_of_index_testmatrix.sort(function (a, b) {
+    return a - b;
+  });
+  for (var i in list_of_index_testmatrix) {
+    if (list_of_index_testmatrix[i] != i) {
+      err += "Missing index " + i + " in Testmatrix\r\n";
+      break;
+    }
+    let tmp = [];
+    data.forEach((item) => {
+      if (item[Directive] === list_of_index_testmatrix[i]) {
+        delete item[Directive];
+        tmp.push(item);
+      }
+    });
+    testmatrix_st_array.push(tmp);
+  }
+
+  for (var index in testmatrix_st_array) {
+    let element = testmatrix_st_array[index];
+    let str = testmatrix_args_template.replace("%index%", index);
+    let list_args = split_TestScript_func(getAllKeyWords, [
+      element,
+      Signal1,
+      false,
+    ]);
+    let remaining_default_args = Object.keys(testmatrix_default).filter(
+      (item) => !list_args.includes(item)
+    );
+
+    if (list_args.length != element.length) {
+      err += "Some duplicated agrs in testmatrix_X[" + index + "]\r\n";
+      continue;
+    }
+    list_args.forEach((item) => {
+      if (item === "teststepsubsection") {
+        str = str.replace(
+          "%" + item + "%",
+          element.filter((signal1) => signal1[Signal1] === item)[0][Test_Descr]
+        );
+      } else {
+        str = str.replace(
+          "%" + item + "%",
+          element.filter((signal1) => signal1[Signal1] === item)[0][Value]
+        );
+      }
+    });
+    remaining_default_args.forEach((item) => {
+      str = str.replace("%" + item + "%", testmatrix_default[item]);
+    });
+    testmatrix += str;
+    if (
+      element != testmatrix_st_array[testmatrix_st_array.length.Get_decrease()]
+    )
+      testmatrix += ",\r\n";
+  }
+
+  testmatrix = testmatrix_struct_template.ReplaceGlobally(
+    ["%TESTMATRIX%", "%CNT%"],
+    [testmatrix, testmatrix_st_array.length]
+  );
+
+  return [testmatrix, err];
+}
+//#endregion
+//#region  TESTCASE_GENERATOR
+function Find_match_dict(data) {
+  let directiveinfo = [];
+  let type = "";
+  let _cntDefined = 0;
+  Object.keys(Dicts).forEach((dict) => {
+    let tmp_directiveinfo = Dicts[dict].filter(
+      (item) => item[Directive].toLowerCase() === data[Directive].toLowerCase()
+    );
+    if (tmp_directiveinfo.length > 0) {
+      type = dict;
+      directiveinfo = tmp_directiveinfo;
+      _cntDefined++;
+    }
+  });
+
+  if (_cntDefined === 0) {
+    return (
+      "Line " +
+      data[Line] +
+      ': Directive "' +
+      data[Directive] +
+      '" NOT match with Help sheet'
+    );
+  }
+  if (_cntDefined > 1) {
+    return (
+      "Line " +
+      data[Line] +
+      "Redefinition of Directive " +
+      data[Directive] +
+      ", please check Help sheet!!"
+    );
+  }
+
+  for (var index in directiveinfo) {
+    let element = directiveinfo[index];
+    let require_fields = Object.keys(element).filter(
+      (item) => item != Directive && item != "PATTERN" && item != "Comment"
+    );
+    let data_fields = Object.keys(data).filter(
+      (item) => item != Directive && item != Test_Descr && item != Line
+    );
+    var is_match = true;
+    if (data_fields.length != require_fields.length) {
+      is_match = false;
+      continue;
+    }
+    data_fields.forEach((e) => {
+      if (!require_fields.includes(e)) is_match = false;
+    });
+    if (is_match) return [element, type];
+  }
+  return (
+    "Line " +
+    data[Line] +
+    ': Directive "' +
+    data[Directive] +
+    '" NOT match with Help sheet'
+  );
+}
+function generate_var(element, Dict, variables, tabs) {
+  let global_variables = "";
+  let internal_variables = "";
+  if (!variables.includes(element[Signal1])) variables.push(element[Signal1]);
+  else {
+    return (
+      "Line " +
+      element[Line] +
+      ': Variable "' +
+      element[Signal1] +
+      '" redefinition\r\n'
+    );
+  }
+  let fields = Object.keys(element).filter((item) => item != Options);
+
+  let variable_template = Dict["PATTERN"];
+  fields.forEach((field) => {
+    variable_template = variable_template
+      .split("%" + field + "%")
+      .join(element[field]);
+  });
+  if (element[Options] === "global") {
+    global_variables = tabs + variable_template + "\r\n";
+  } else if (element[Options] === "internal") {
+    internal_variables = tabs + variable_template + "\r\n";
+  } else {
+    return (
+      "Line " +
+      element[Line] +
+      ': Please choose correct "Options" for Variable "' +
+      element[Signal1] +
+      '"\r\n'
+    );
+  }
+  return [global_variables, internal_variables];
+}
+function generate_func(element, Dict, variables_defined, tabs) {
+  let internal_variables = "";
+  let Testgen = "";
+  if (IsDefined(element[Test_Descr])) {
+    Testgen =
+      tabs + 'func_testStepSubSection("' + element[Test_Descr] + '");\r\n';
+  }
+  if (element[Directive].toLowerCase() === "endfor")
+    tabs = tabs.replace("\t", "");
+  if (IsDefined(Dict["Comment"])) {
+    let spl_str = Dict["Comment"].split("|");
+    if (spl_str.length === 3) {
+      if (!variables_defined.includes(element[Options])) {
+        variables_defined.push(element[Options]);
+        internal_variables =
+          tabs + spl_str[1] + " " + element[Options] + ";\r\n";
+      }
+    } else {
+      if (!variables_defined.includes(spl_str[1])) {
+        variables_defined.push(spl_str[1]);
+        internal_variables = tabs + spl_str[2] + " " + spl_str[1] + ";\r\n";
+      }
+    }
+  }
+  let fields = Object.keys(element);
+  let function_template = Dict["PATTERN"];
+  fields.forEach((field) => {
+    function_template = function_template.ReplaceGlobally(
+      ["\r\n", "%" + field + "%"],
+      ["\r" + tabs, element[field]]
+    );
+  });
+  Testgen += tabs + function_template + "\r\n";
+  if (element[Directive].toLowerCase() === "for") tabs += "\t";
+  return [Testgen, internal_variables, tabs];
+}
+
+function generate_enum_var(variables_defined, enum_name) {
+  let internal_variables = "";
+  let err = "";
+  if (!variables_defined.includes(enum_name + "_value")) {
+    variables_defined.push(enum_name + "_value");
+    let zero_el = "";
+    let internal_variables_arr = [];
+    internal_variables =
+      "\t" +
+      "int" +
+      " " +
+      enum_name +
+      "_value[" +
+      Enum_Dict[enum_name].length +
+      "] = {\r\n";
+    for (var index in Enum_Dict[enum_name]) {
+      let el = Enum_Dict[enum_name][index];
+      if (!IsDefined(el["Element"])) {
+        err = "Please define enough elements in Enum " + enum_name + "\r\n";
+        return err;
+      }
+      if (!IsDefined(el["Value"])) {
+        err = "Please define enough value in Enum " + enum_name + "\r\n";
+        return err;
+      }
+      if (el[Value] == 0) {
+        zero_el = "\t\t0,\t//" + el["Element"];
+        continue;
+      }
+      internal_variables_arr.push(
+        "\t\t" + el["Value"] + ",\t//" + el["Element"]
+      );
+    }
+    if (zero_el != "") internal_variables_arr.push(zero_el);
+    internal_variables_arr[
+      internal_variables_arr.length - 1
+    ] = internal_variables_arr[internal_variables_arr.length - 1].replace(
+      ",",
+      " "
+    );
+    internal_variables += internal_variables_arr.join("\r\n") + "\r\n\t};\r\n";
+  }
+  return [internal_variables];
+}
+function generate_special_var(element, structs, enums, variables_defined) {
+  let result = "";
+  let err = "";
+  if (element[Directive].toLowerCase() == "struct") {
+    if (!IsDefined(Struct_Dict[element[Options].toLowerCase()])) {
+      err =
+        "Line " +
+        element[Line] +
+        ": Struct " +
+        element[Options] +
+        " is NOT defined\r\n";
+      return err;
+    }
+    if (IsDefined(structs[element[Signal1]])) {
+      err =
+        "Line " +
+        element[Line] +
+        ": Variable " +
+        element[Signal1] +
+        " redefinition\r\n";
+      return err;
+    }
+    structs[element[Signal1]] = element[Options].toLowerCase();
+  }
+  if (element[Directive].toLowerCase() == "enum") {
+    if (!IsDefined(Enum_Dict[element[Options].toLowerCase()])) {
+      err =
+        "Line " +
+        element[Line] +
+        ": Enum " +
+        element[Options] +
+        " is NOT defined\r\n";
+      return err;
+    }
+    if (IsDefined(enums[element[Signal1]]))
+      return (
+        "Line " +
+        element[Line] +
+        ": Variable " +
+        element[Signal1] +
+        " redefinition\r\n"
+      );
+    enums[element[Signal1]] = element[Options].toLowerCase();
+    result = generate_enum_var(
+      variables_defined,
+      element[Options].toLowerCase()
+    );
+  }
+  return result;
+}
+function struct_gen(
+  signal,
+  struct_info,
+  func,
+  array_cnt,
+  tabs,
+  list_of_datatype,
+  variables_defined,
+  Isinit
+) {
+  let err = "";
+  let struct = "";
+  let internal_variables = "";
+  let template_signal = "";
+  let index_level = (tabs.match(/\t/g) || []).length - 1;
+  if (array_cnt > 0) {
+    let variable_index = "arr_index_" + index_level;
+    if (!variables_defined.includes(variable_index)) {
+      variables_defined.push(variable_index);
+      internal_variables = "\tint " + variable_index + ";\r\n";
+    }
+    if (!variables_defined.includes("chTemp")) {
+      variables_defined.push("chTemp");
+      internal_variables += "\tchar chTemp[1024];\r\n";
+    }
+    struct =
+      tabs +
+      "for (" +
+      "arr_index_" +
+      index_level +
+      " = 0; " +
+      "arr_index_" +
+      index_level +
+      " < " +
+      array_cnt +
+      "; " +
+      "arr_index_" +
+      index_level +
+      "++) {\r\n";
+    tabs += "\t";
+    index_level++;
+    template_signal = "((" + signal + ")[%d]).%STRUCT_EL%";
+  } else {
+    template_signal = "(" + signal + ").%STRUCT_EL%";
+  }
+  let max_index = 0;
+  split_TestScript_func(getAllKeyWords, [
+    struct_info,
+    "DataType",
+    false,
+  ]).forEach((el) => {
+    if (!IsDefined(list_of_datatype[el])) list_of_datatype[el] = 0;
+  });
+  for (var index in struct_info) {
+    let Function = "";
+    let el = struct_info[index];
+    let Is_vardefined = false;
+    let value_compare = "";
+    if (!IsDefined(el["DataType"])) {
+      err = "Please define enough DataType in Struct\r\n";
+      return err;
+    }
+    if (!IsDefined(el["Variable name"])) {
+      err = "Please define enough Variable name in Struct\r\n";
+      return err;
+    }
+    let [varname, cnt] = Check_Array(el["Variable name"]);
+    if (IsDefined(Struct_Dict[el["DataType"]])) {
+      Is_vardefined = true;
+      let result = struct_gen(
+        template_signal.replace("%STRUCT_EL%", varname),
+        Struct_Dict[el["DataType"]],
+        func,
+        cnt,
+        tabs,
+        list_of_datatype,
+        variables_defined,
+        Isinit
+      );
+      if (IsString(result)) {
+        err = result;
+        return err;
+      }
+      let [tmp_struct, tmp_internal_variables, tmp_maxindex] = result;
+      internal_variables += tmp_internal_variables;
+      struct += tmp_struct;
+      if (max_index < tmp_maxindex) max_index = tmp_maxindex;
+      continue;
+    } else if (IsDefined(Enum_Dict[el["DataType"]])) {
+      Is_vardefined = true;
+      if (func === "Check") Function = "funcIDE_ReadVariableAndCheck";
+      else if (func === "Set") Function = "funcIDE_WriteVariable";
+      else {
+        ///DO NOTHING
+      }
+      let tmp_maxindex = Enum_Dict[el["DataType"]].length;
+      if (max_index < tmp_maxindex) max_index = tmp_maxindex;
+      let result = generate_enum_var(variables_defined, el["DataType"]);
+      if (IsString(result)) {
+        err = result;
+        return err;
+      }
+      internal_variables += result[0];
+      let _idx = "";
+      if (list_of_datatype[el["DataType"]] === 0) {
+        _idx = "%MAIN_IDX%";
+      } else {
+        _idx = "%MAIN_IDX%+" + list_of_datatype[el["DataType"]];
+      }
+      if (IsNumber(Isinit)) {
+        value_compare = Isinit;
+      } else {
+        value_compare =
+          el["DataType"] + "_value[(" + _idx + ")%" + tmp_maxindex + "]";
+      }
+      list_of_datatype[el["DataType"]] =
+        (list_of_datatype[el["DataType"]] + 1) % tmp_maxindex;
+    } else {
+      let find_result = Compare_Dict.find(
+        (item) => item["DataType"] === el["DataType"]
+      );
+
+      if (IsDefined(find_result)) {
+        Is_vardefined = true;
+        Function = find_result[func];
+        let regex = /%(?<cnt>[0-9])/g;
+        let tmp_maxindex = Number(
+          regex.exec(find_result["Compare"]).groups.cnt
+        );
+        if (max_index < tmp_maxindex) max_index = tmp_maxindex;
+        let _idx = "";
+        if (list_of_datatype[el["DataType"]] === 0) {
+          _idx = "%MAIN_IDX%";
+        } else {
+          _idx = "%MAIN_IDX%+" + list_of_datatype[el["DataType"]];
+        }
+        if (IsNumber(Isinit)) {
+          value_compare = Isinit;
+        } else {
+          value_compare = find_result["Compare"].replace("%INDEX%", _idx);
+        }
+        list_of_datatype[el["DataType"]] =
+          (list_of_datatype[el["DataType"]] + 1) % tmp_maxindex;
+      }
+    }
+    if (!Is_vardefined) {
+      err = "Datatype " + el["DataType"] + " is NOT defined!!\r\n";
+      return err;
+    }
+    let snprintf_args =
+      "(" + template_signal.replace("%STRUCT_EL%", varname) + ")";
+    if (cnt > 1) {
+      if (!variables_defined.includes("arr_index_" + index_level)) {
+        variables_defined.push("arr_index_" + index_level);
+        internal_variables += "\tint " + "arr_index_" + index_level + ";\r\n";
+      }
+      struct +=
+        tabs +
+        "for (" +
+        "arr_index_" +
+        index_level +
+        " = 0; " +
+        "arr_index_" +
+        index_level +
+        " < " +
+        cnt +
+        "; " +
+        "arr_index_" +
+        index_level +
+        "++) {\r\n";
+      tabs += "\t";
+      index_level++;
+      snprintf_args += "[%d]";
+    }
+    snprintf_args = '"' + snprintf_args + '"';
+    let cnt_index = (snprintf_args.match(/\[%d\]/g) || []).length;
+    if (cnt_index > 0) {
+      for (var i = cnt_index; i > 0; i--) {
+        snprintf_args += ", " + "arr_index_" + (index_level - i);
+      }
+      struct += tabs + "snprintf(chTemp,1024," + snprintf_args + ");\r\n";
+      struct += tabs + Function + "(chTemp, " + value_compare + ");\r\n";
+      if (cnt > 1) {
+        tabs = tabs.replace("\t", "");
+        struct += tabs + "}\r\n";
+        index_level--;
+      }
+    } else {
+      struct +=
+        tabs +
+        Function +
+        "(" +
+        template_signal.replace("%STRUCT_EL%", varname) +
+        ", " +
+        value_compare +
+        ");\r\n";
+    }
+  }
+  struct += tabs.replace("\t", "") + "}\r\n";
+  return [struct, internal_variables, max_index];
+}
+
+function checkdefaultstruct(element, structs, tabs, variables_defined) {
+  let testgen = "";
+  let internal_variables = "";
+  if (!IsDefined(structs[element[Signal1]])) {
+    return (
+      "Line " +
+      element[Line] +
+      ": Variable " +
+      element[Signal1] +
+      " is not declared!!\r\n"
+    );
+  }
+  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
+  let max_idx;
+  if (IsDefined(element[Test_Descr])) {
+    testgen +=
+      tabs + 'func_testStepSubSection("' + element[Test_Descr] + '");\r\n';
+  }
+  [testgen, internal_variables, max_idx] = struct_gen(
+    var_name,
+    Struct_Dict[structs[element[Signal1]]],
+    "Check",
+    arr_cnt,
+    tabs,
+    [],
+    variables_defined,
+    Number(element[Value])
+  );
+  return [testgen, internal_variables];
+}
+
+function checkvaluestruct(element, structs, tabs, variables_defined, mainIDX) {
+  let testgen = "";
+  let tmp_testgen = "";
+  let internal_variables = "";
+  if (!IsDefined(structs[element[Signal1]])) {
+    return (
+      "Line " +
+      element[Line] +
+      ": Variable " +
+      element[Signal1] +
+      " is not declared!!\r\n"
+    );
+  }
+  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
+  let max_idx;
+  if (IsDefined(element[Test_Descr])) {
+    testgen +=
+      tabs + 'func_testStepSubSection("' + element[Test_Descr] + '");\r\n';
+  }
+  [tmp_testgen, internal_variables, max_idx] = struct_gen(
+    var_name,
+    Struct_Dict[structs[element[Signal1]]],
+    "Check",
+    arr_cnt,
+    tabs,
+    [],
+    variables_defined,
+    false
+  );
+  testgen += tmp_testgen.replace(/%MAIN_IDX%/g, mainIDX);
+  return [testgen, internal_variables, max_idx];
+}
+
+function setvaluestruct(element, structs, tabs, variables_defined, mainIDX) {
+  let testgen = "";
+  let tmp_testgen = "";
+  let internal_variables = "";
+  if (!IsDefined(structs[element[Signal1]])) {
+    return (
+      "Line " +
+      element[Line] +
+      ": Variable " +
+      element[Signal1] +
+      " is not declared!!\r\n"
+    );
+  }
+  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
+  let max_idx;
+  if (IsDefined(element[Test_Descr])) {
+    testgen +=
+      tabs + 'func_testStepSubSection("' + element[Test_Descr] + '");\r\n';
+  }
+  [tmp_testgen, internal_variables, max_idx] = struct_gen(
+    var_name,
+    Struct_Dict[structs[element[Signal1]]],
+    "Set",
+    arr_cnt,
+    tabs,
+    [],
+    variables_defined,
+    false
+  );
+  testgen += tmp_testgen.replace(/%MAIN_IDX%/g, mainIDX);
+  return [testgen, internal_variables, max_idx];
+}
+function testcase_gen(data, key, variables_defined) {
+  var tabs = "\t";
+  var Testgen = "";
+  var SpecialTestgen = "";
+  var global_variables = "";
+  var internal_variables = "";
+  let err = "";
+  let structs = [];
+  let enums = [];
+  let MaxIDX = 0;
+  let mainIDX = "i";
+  for (var index in data[key]) {
+    let element = data[key][index];
+    if (!IsDefined(element[Directive])) {
+      err += "Line " + element[Line] + ': Please define "Directive"\r\n';
+      continue;
+    }
+    if (element[Directive].toLowerCase() === "comment") {
+      Testgen += tabs + "/*" + element[Test_Descr] + "*/\r\n";
+      continue;
+    }
+    if (element[Directive].toLowerCase() === "teststepsubsection") {
+      Testgen +=
+        tabs + 'func_testStepSubSection("' + element[Test_Descr] + '");\r\n';
+      continue;
+    }
+
+    let Dict_Result = [];
+    let type = "";
+    let Find_Result = Find_match_dict(element);
+    if (typeof Find_Result == "string") {
+      err += Find_Result + ' in "' + key + '"\r\n';
+      continue;
+    }
+    [Dict_Result, type] = Find_Result;
+    if (type === "Vars") {
+      let Var_result = generate_var(
+        element,
+        Dict_Result,
+        variables_defined,
+        tabs
+      );
+      if (IsString(Var_result)) {
+        err += Var_result;
+        continue;
+      }
+      global_variables += Var_result[0];
+      internal_variables += Var_result[1];
+    } else if (type === "Funcs") {
+      let [tmp_Testcase, tmp_internal, tmp_tabs] = generate_func(
+        element,
+        Dict_Result,
+        variables_defined,
+        tabs
+      );
+      tabs = tmp_tabs;
+      if (SpecialTestgen != "") {
+        SpecialTestgen += tmp_Testcase;
+      } else {
+        Testgen += tmp_Testcase;
+      }
+      internal_variables += tmp_internal;
+    } else if (type === "Vars_special") {
+      let tmp_result = generate_special_var(
+        element,
+        structs,
+        enums,
+        variables_defined
+      );
+      if (IsString(tmp_result)) {
+        err += tmp_result;
+        continue;
+      }
+      internal_variables += tmp_result[0];
+    } else {
+      if (element[Directive].toLowerCase() == "forstructenum") {
+        if (IsDefined(element[Test_Descr])) {
+          SpecialTestgen +=
+            tabs +
+            'func_testStepSubSection("' +
+            element[Test_Descr] +
+            '");\r\n';
+        }
+        SpecialTestgen +=
+          tabs +
+          Dict_Result["PATTERN"].replace(/%Value%/g, element[Value]) +
+          "\r\n";
+        tabs += "\t";
+        if (!variables_defined.includes(element[Value])) {
+          variables_defined.push(element[Value]);
+          internal_variables += "\tint " + element[Value] + ";\r\n";
+        }
+        mainIDX = element[Value];
+        continue;
+      }
+      if (element[Directive].toLowerCase() == "endforstructenum") {
+        if (IsDefined(element[Test_Descr])) {
+          SpecialTestgen +=
+            tabs +
+            'func_testStepSubSection("' +
+            element[Test_Descr] +
+            '");\r\n';
+        }
+        tabs = tabs.replace("\t", "");
+        mainIDX = "i";
+        Testgen += SpecialTestgen.replace("%MAXIDX%", MaxIDX) + tabs + "}\r\n";
+        MaxIDX = 0;
+        SpecialTestgen = "";
+        continue;
+      }
+      let [tmp_Testcase, tmp_internal, tmp_maxIDX] = eval(
+        element[Directive].toLowerCase()
+      )(element, structs, tabs, variables_defined, mainIDX);
+      if (IsDefined(mainIDX)) {
+        if (tmp_maxIDX > MaxIDX) MaxIDX = tmp_maxIDX;
+        SpecialTestgen += tmp_Testcase;
+      } else {
+        Testgen += tmp_Testcase;
+      }
+      internal_variables += tmp_internal;
+    }
+  }
+  return [Testgen, global_variables, internal_variables, err];
+}
+//#endregion
+//#region COLLECT DATA AND GENERRATE FOR EACH SHEET
+function genarate_with_testSpec_data(testID, data, List_gen) {
+  let err = "";
+  let variables_defined = [];
+  variables_defined.push("i");
+  const List_gen_funcs = {
+    includes: includes_gen,
+    testdescr: testdescr_gen,
+    testmatrix_st: testmatrix_gen,
+    testcase: testcase_gen,
+  };
+  let list_of_testscript_keywords = split_TestScript_func(getAllKeyWords, [
+    data[testID],
+    TestId,
+    false,
+  ]);
+  let split_testscript_by_keywords = split_TestScript_func(getAllGroup_func, [
+    getTestSubGroup,
+    data[testID],
+    list_of_testscript_keywords,
+    TestId,
+    0,
+  ]);
+
+  list_of_testscript_keywords.forEach((element) => {
+    let tmp_internal_variables = "";
+    let tmp_global_variables = "";
+    let tmp_generated = "";
+    let tmp_error = "";
+    if (Object.keys(List_gen_funcs).includes(element)) {
+      [tmp_generated, tmp_error] = List_gen_funcs[element](
+        split_testscript_by_keywords[element]
+      );
+      List_gen[element] += tmp_generated;
+    } else {
+      [
+        tmp_generated,
+        tmp_global_variables,
+        tmp_internal_variables,
+        tmp_error,
+      ] = List_gen_funcs["testcase"](
+        split_testscript_by_keywords,
+        element,
+        variables_defined
+      );
+      tmp_generated = Testscript_split_region.ReplaceGlobally(
+        ["%CASE%", "%TEST_SCRIPT%"],
+        [element.toUpperCase(), tmp_generated]
+      );
+      List_gen["testscript"] += tmp_generated;
+    }
+    List_gen["global_variables"] += tmp_global_variables;
+    List_gen["internal_variables"] += tmp_internal_variables;
+    err += tmp_error;
+  });
+  return err;
+}
+function genarate_with_regression_data(testID, data, List_gen) {
+  let err = "";
+  const List_replace_keywords = ["%AUTHOR%", "%DATE%", "%VERSION%", "%NOTE%"];
+  data.forEach((element) => {
+    if (IsDefined(element["TestID"])) {
+      if (element["TestID"].toLowerCase() === testID.toLowerCase()) {
+        let version = "";
+        let author = "";
+        let date = "";
+        let note = "";
+        if (IsDefined(element["Version"])) version = element["Version"];
+        if (IsDefined(element["Author"])) author = element["Author"];
+        if (IsDefined(element["Date"])) date = element["Date"];
+        if (IsDefined(element["Note"])) note = " => Note: " + element["Note"];
+        List_gen["regression"] +=
+          Regression_region.ReplaceGlobally(List_replace_keywords, [
+            author,
+            date,
+            version,
+            note,
+          ]) + "\r\n";
+      }
+    }
+  });
+  return err;
+}
+function genarate_with_requirement_data(testID, data, List_gen) {
+  let err = "";
+  let filter_data = data.filter((item) => IsDefined(item[testID]));
+  if (filter_data.length === 0)
+    return testID + " NOT mark with any Requirement!\r\n";
+  for (var index in filter_data) {
+    let element = filter_data[index];
+    if (!IsDefined(element["Requirement Id"])) {
+      err += testID + " marks with no Requirement ID!\r\n";
+      continue;
+    }
+    if (!IsDefined(element["Requirement Text"])) {
+      err += testID + " marks with no Requirement Text!\r\n";
+      continue;
+    }
+    List_gen["requirements"] +=
+      "\r\n[" +
+      element["Requirement Id"] +
+      "]:\r\n" +
+      element["Requirement Text"] +
+      "\r\n";
+  }
+  return err;
+}
+//#endregion
+//#region MAIN_FUNCS
+function Update_Dict(args) {
+  const [
+    _dict_normal,
+    _variable_normal,
+    _dict_special,
+    _variable_special,
+    _struct,
+    _enum,
+    _compare,
+  ] = args;
+  Dicts["Funcs"] = _dict_normal;
+  Dicts["Vars"] = _variable_normal;
+  Dicts["Funcs_special"] = _dict_special;
+  Dicts["Vars_special"] = _variable_special;
+  Struct_Dict = _struct;
+  Enum_Dict = _enum;
+  Compare_Dict = _compare;
+}
+
+function Update_OverviewInfo(lst) {
+  Object.keys(List_Overview_Info).forEach((item) => {
+    List_Overview_Info[item] = lst[item];
+  });
+}
+
+function TestScript(testID, TestSpec_data, Regression_data, Req_data) {
+  let err = "";
+  const List_gen = {
+    testID: testID,
+    requirements: "",
+    testdescr: "",
+    author: List_Overview_Info["Author"],
+    reportpath: path
+      .join(List_Overview_Info["Report"], testID)
+      .replace(/\\/g, "\\\\"),
+    date: List_Overview_Info["Date"],
+    release: List_Overview_Info["Release"],
+    regression: "",
+    includes: "",
+    global_variables: "",
+    internal_variables: "",
+    testmatrix_st: "",
+    testscript: "",
+  };
+  err += genarate_with_testSpec_data(testID, TestSpec_data, List_gen);
+  err += genarate_with_regression_data(testID, Regression_data, List_gen);
+  err += genarate_with_requirement_data(testID, Req_data, List_gen);
+  try {
+    var TestScripts_FULL = readFileSync("./TestScripts_Template.can", "utf8");
+  } catch (e) {
+    err += e.stack + "\r\n";
+  }
+  TestScripts_FULL = TestScripts_FULL.ReplaceGlobally(
+    List_replace_keywords,
+    Object.values(List_gen)
+  );
+  return [TestScripts_FULL, err];
+}
+
+function Genarate_TestScript(
+  testID,
+  TestSpec_data,
+  Regression_data,
+  Req_data,
+  Output
+) {
+  let [TestScripts_FULL, err] = TestScript(
+    testID,
+    TestSpec_data,
+    Regression_data,
+    Req_data
+  );
+  let gen_path = "";
+  if (IsDefined(Output)) {
+    gen_path = Output;
+  } else {
+    gen_path = List_Overview_Info["Output"];
+  }
+  writeFile(
+    path.join(gen_path, testID + ".can"),
+    TestScripts_FULL,
+    function (error) {
+      if (error) err += error.stack + "\r\n";
+    }
+  );
+
+  return err;
+}
+//#endregion

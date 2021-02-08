@@ -1,0 +1,33 @@
+/*@!Encoding:1252*/
+includes{
+%INCLUDES%}
+
+///@cond DoxyComp
+variables{
+%GLOBAL_VARS%//@cond DoxyComp
+}
+///@endcond
+
+/**          
+@brief          %TEST_DESCR%
+
+@author     	%AUTHOR%
+@date      		%DATE%
+@version    	%RELEASE%
+%REGRESSION%
+**/
+
+/**
+%REQUIREMENT%
+**/
+
+testcase %NAME%()
+{
+%INTERNAL_VARS%
+%TEST_MATRIX%
+
+	funcAgr_SetTestCase("%NAME%","%TEST_DESCR%");
+	testReportFileName("%REPORT_PATH%");
+%TEST_REGION%
+}
+

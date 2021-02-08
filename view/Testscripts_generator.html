@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>TestScript Generator</title>
+    <link rel="stylesheet" href="../assets/css/dark_theme.css">
+    <link rel="stylesheet" href="../prism/prism.css">
+</head>
+<script>
+
+</script>
+
+<body onresize="Resize()" id="body">
+    <div class="body_contain" id="body_contain">
+        <div class="Control" id="control">
+            <div class="Path_selection">
+                <div class="div_headline">Load</div>
+                <div class="selection">
+                    <div>
+                        <label for="filetoload_drd">Choose excel file:</label>
+                    </div>
+                    <div class="selection_row">
+                        <div class="dropdownlist" id="filetoload_drd">
+                            <div>
+                                <input type="text" placeholder="Input path..." id="excel_path" class="dropdown_input"
+                                    onkeyup="filterFunction()">
+                            </div>
+                            <div>
+                                <button class="drd_btn" id="ExcelPath_drd_btn"></button>
+                            </div>
+                        </div>
+                        <button class="type1_button" id="browseExcelPath_btn">
+                            ...
+                        </button>
+                        <div class="dropdown_content" id="filetoload_his"> </div>
+                    </div>
+                </div>
+                <div class="selection">
+                    <div>
+                        <label for="genTo_drd">Choose folder for generating:</label>
+                    </div>
+                    <div class="selection_row">
+                        <div class="dropdownlist" id="genTo_drd">
+                            <div>
+                                <input type="text" placeholder="Input path..." id="gento_path" class="dropdown_input"
+                                    onkeyup="filterFunction()">
+                            </div>
+                            <div>
+                                <button class="drd_btn" id="GenTo_drd_btn"></button>
+                            </div>
+                        </div>
+                        <button class="type1_button" id="browsePathtoGen_btn">
+                            ...
+                        </button>
+                        <div class="dropdown_content" id="genTo_his"> </div>
+                    </div>
+                </div>
+            </div>
+            <div class="Test_ID" id="test_id">
+                <div class="button_row"
+                    style="grid-template-columns: 30px 3px 71px 3px 71px auto 71px; border-bottom: 1.5px solid #686868; padding-bottom: 5px;">
+                    <div class="type1_button" id="reload_btn" style="font-family: Segoe MDL2 Assets"></div>
+                    <div></div>
+                    <div class="type1_button" id="selectall_btn">Select All</div>
+                    <div></div>
+                    <div class="type1_button" id="removeall_btn">Remove All</div>
+                    <div></div>
+                    <div>
+                        <label class="togglebutton_type1" id="preview_btn">Preview
+                            <input type="checkbox" checked="checked" id="preview_toggle">
+                            <span class="checkmark_type1"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="div_headline">List Test ID</div>
+                <div class="List_TestID" id="list_testID">
+                </div>
+            </div>
+            <div class="button_row"
+                style="grid-template-columns: auto 71px; border-top: 1.5px solid #686868; padding-top: 5px;">
+                <div></div>
+                <div class="type2_button" id="generate_btn">Generate</div>
+            </div>
+        </div>
+        <div class="column_splitter"></div>
+        <div class="display" id="display">
+            <div class="preview_contain">
+                <div class="tab" id="tabs">
+                </div>
+                <div class="preview" id="preview">
+
+                </div>
+            </div>
+            <div class="row_splitter"></div>
+            <div class="log_contain">
+                <div class="div_headline">Output log</div>
+                <pre id="log_tb"></pre>
+            </div>
+        </div>
+    </div>
+    <script src="../prism/prism.js">
+    </script>
+    <script type="module" src="Testscripts_generator.js">
+    </script>
+</body>
+
+</html>
