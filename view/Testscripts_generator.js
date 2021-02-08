@@ -9,16 +9,19 @@ import {
   ReadExcelInfo,
 } from "../generator/Collect_TestScript_Information.js";
 
-var Split = require("split-grid");
+const Split = require("split-grid");
+const fs = require("fs");
+
+let IsInDropdown = false;
 
 const { dialog } = require("electron").remote;
 
 const pre_code_template = [
   '<div id="%ID%_tab" class="tabcontent">',
-  '<span onclick="reload_OneTestScript(this.parentElement.id)"' +
+  '<div title="Reload"> <span onclick="reload_OneTestScript(this.parentElement.id)"' +
     " class=" +
     '"topleft"' +
-    "></span>",
+    "></span> </div>",
   '<pre class="line-numbers language-C++">',
   '<code id="preview_%ID%">',
   "%CODE%",
@@ -27,7 +30,7 @@ const pre_code_template = [
   "</div>",
 ].join("\r\n");
 
-const button_tab = [
+const button_tab_template = [
   "<button class=",
   "tablinks",
   " onclick=",
@@ -37,10 +40,20 @@ const button_tab = [
   ">%ID%</button>",
 ].join('"');
 
-const gento_path = document.getElementById("gento_path");
+const dropbox_item_template = [
+  "<div title='%VALUE%'>",
+  "<div class='dropdown_container_item' onclick='select_dropboxItem(this.parentElement, this)'>%VALUE%</div>",
+  "</div>\r\n",
+].join("\r\n");
+
+const gento_path = document.getElementById("gento_path_input");
 const browsePathtoGen_btn = document.getElementById("browsePathtoGen_btn");
-const excel_path = document.getElementById("excel_path");
+const GenTo_drd_btn = document.getElementById("GenTo_drd_btn");
+const gento_path_container = document.getElementById("gento_path_container");
+const excel_path = document.getElementById("excel_path_input");
 const browseExcelPath_btn = document.getElementById("browseExcelPath_btn");
+const ExcelPath_drd_btn = document.getElementById("ExcelPath_drd_btn");
+const excel_path_container = document.getElementById("excel_path_container");
 const list_testID = document.getElementById("list_testID");
 const reload_btn = document.getElementById("reload_btn");
 const removeall_btn = document.getElementById("removeall_btn");
@@ -52,7 +65,35 @@ const preview_btn = document.getElementById("preview_btn");
 const preview = document.getElementById("preview");
 
 let list_testcases = [];
+let lst_items_excelPath_dropbox = [];
+let lst_items_gentoPath_dropbox = [];
 
+function GetAbsPath(path) {
+  return path.replace(/[\/\\]$/, "") + "\\";
+}
+
+function Check_DropBox_Contain(lst_items, itembechecked) {
+  for (var index in lst_items) {
+    if (lst_items[index].toLowerCase() === itembechecked.toLowerCase()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function Iuclude_path_Dropbox(dropbox_container, lstItems, path) {
+  let abs_path = GetAbsPath(path);
+  if (!fs.existsSync(path)) {
+    return "Path " + path + " NOT exist!!\r\n";
+  }
+  if (!Check_DropBox_Contain(lstItems, abs_path)) {
+    lstItems.push(abs_path);
+    let dropbox_item = dropbox_item_template.replace(/%VALUE%/g, path);
+    dropbox_container.innerHTML = dropbox_item + dropbox_container.innerHTML;
+  }
+
+  return "";
+}
 function GetListTestID() {
   list_testcases = ReadExcelInfo(["GetListTestcase"]);
   let gento = ReadExcelInfo(["GetPathGenerateTo"]);
@@ -102,9 +143,9 @@ function preview_TestScripts() {
       "GetAllTestScriptText",
       list_testcases,
     ]);
-    log_tb.innerHTML = err;
+    log_tb.innerHTML += err;
     list_testcases.forEach((item) => {
-      tabs.innerHTML += button_tab.replace(/%ID%/g, item) + "\r\n";
+      tabs.innerHTML += button_tab_template.replace(/%ID%/g, item) + "\r\n";
       preview.innerHTML += pre_code_template
         .replace(/%ID%/g, item)
         .replace("%CODE%", lst_testscriptsText[item]);
@@ -123,7 +164,24 @@ function preview_TestScripts() {
     }
   }
 }
+
+ExcelPath_drd_btn.addEventListener("click", () => {
+  if (excel_path_container.style.display != "block") {
+    excel_path_container.style.display = "block";
+  } else {
+    excel_path_container.style.display = "none";
+  }
+});
+
+ExcelPath_drd_btn.addEventListener("focusout", () => {
+  let hovering_element = document;
+  if (IsInDropdown) return;
+  excel_path_container.style.display = "none";
+});
+
 browseExcelPath_btn.addEventListener("click", () => {
+  let error = "";
+  log_tb.innerHTML = "";
   dialog
     .showOpenDialog({
       properties: ["openFile"],
@@ -137,6 +195,58 @@ browseExcelPath_btn.addEventListener("click", () => {
         gento_path.value = gento;
         GetListTestID();
         preview_TestScripts();
+
+        error += Iuclude_path_Dropbox(
+          excel_path_container,
+          lst_items_excelPath_dropbox,
+          result.filePaths.toString()
+        );
+        error += Iuclude_path_Dropbox(
+          gento_path_container,
+          lst_items_gentoPath_dropbox,
+          gento
+        );
+
+        log_tb.innerHTML += error;
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      log_tb.innerHTML += err.stack;
+    });    
+});
+
+GenTo_drd_btn.addEventListener("click", () => {
+  if (gento_path_container.style.display != "block") {
+    gento_path_container.style.display = "block";
+  } else {
+    gento_path_container.style.display = "none";
+  }
+});
+
+GenTo_drd_btn.addEventListener("focusout", () => {
+  let hovering_element = document;
+  if (IsInDropdown) return;
+  gento_path_container.style.display = "none";
+});
+
+browsePathtoGen_btn.addEventListener("click", () => {
+  let error ="";
+  log_tb.innerHTML = "";
+  dialog  
+    .showOpenDialog({
+      properties: ["openDirectory"],
+      defaultPath: gento_path.value,
+    })
+    .then((result) => {
+      if (result && result.canceled === false) {
+        gento_path.value = result.filePaths;
+        error += Iuclude_path_Dropbox(
+          gento_path_container,
+          lst_items_gentoPath_dropbox,
+          result.filePaths.toString()
+        );
+        log_tb.innerHTML += error;
       }
     })
     .catch((err) => {
@@ -145,29 +255,26 @@ browseExcelPath_btn.addEventListener("click", () => {
     });
 });
 
-browsePathtoGen_btn.addEventListener("click", () => {
-  dialog
-    .showOpenDialog({
-      properties: ["openDirectory"],
-      defaultPath: gento_path.value,
-    })
-    .then((result) => {
-      if (result && result.canceled === false) {
-        gento_path.value = result.filePaths;
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      log_tb.innerHTML = err.stack;
-    });
-});
-
 preview_btn.addEventListener("click", () => {
+  let error = "";
+  log_tb.innerHTML = "";
   try {
+    error += Iuclude_path_Dropbox(
+      excel_path_container,
+      lst_items_excelPath_dropbox,
+      excel_path.value.toString()
+    );
+    error += Iuclude_path_Dropbox(
+      gento_path_container,
+      lst_items_gentoPath_dropbox,
+      gento_path.value.toString()
+    );
+
+    log_tb.innerHTML += error;
     preview_TestScripts();
   } catch (e) {
     console.log(e.stack);
-    log_tb.innerHTML = e.stack.toString();
+    log_tb.innerHTML += e.stack.toString();
   }
 });
 
@@ -175,35 +282,63 @@ generate_btn.addEventListener("click", () => {
   let err = "";
   try {
     let list_selected_TestID = [];
+
+    err += Iuclude_path_Dropbox(
+      excel_path_container,
+      lst_items_excelPath_dropbox,
+      excel_path.value.toString()
+    );
+    err += Iuclude_path_Dropbox(
+      gento_path_container,
+      lst_items_gentoPath_dropbox,
+      gento_path.value.toString()
+    );
+
     list_testcases.forEach((test) => {
       if (document.getElementById(test).checked) {
         list_selected_TestID.push(test);
       }
     });
     if (list_selected_TestID.length === 0) {
-      log_tb.innerHTML = "Please select atleast 1 test ID for generating!!\r\n";
+      err += "Please select atleast 1 test ID for generating!!\r\n";
+      log_tb.innerHTML = err;
       return;
     }
-    err = ReadExcelInfo([
+    err += ReadExcelInfo([
       "GenerateTestscripts",
       [list_testcases, list_selected_TestID, gento_path.value],
     ]);
+    log_tb.innerHTML = "Generated in " + gento_path.value + "\r\n";
     console.log(err);
-    log_tb.innerHTML = err;
+    log_tb.innerHTML += err;
   } catch (e) {
     console.log(e.stack);
-    log_tb.innerHTML = e.stack.toString();
+    log_tb.innerHTML += e.stack.toString();
   }
 });
 
 reload_btn.addEventListener("click", () => {
+  let error ="";
+  log_tb.innerHTML = "";
   try {
+    error += Iuclude_path_Dropbox(
+      excel_path_container,
+      lst_items_excelPath_dropbox,
+      excel_path.value.toString()
+    );
+    error += Iuclude_path_Dropbox(
+      gento_path_container,
+      lst_items_gentoPath_dropbox,
+      gento_path.value.toString()
+    );
+    log_tb.innerHTML += error;
+
     UpdateExcelInfo(excel_path.value);
     GetListTestID();
     preview_TestScripts();
   } catch (e) {
     console.log(e.stack);
-    log_tb.innerHTML = e.stack.toString();
+    log_tb.innerHTML += e.stack.toString();
   }
 });
 
@@ -276,6 +411,24 @@ Split({
   ],
 });
 
+function filterFunction() {}
+
+function select_dropboxItem(item_title, selecteditem) {
+  let dropdown_container = item_title.parentElement;
+  dropdown_container.style.display = "none";
+  document.getElementById(
+    dropdown_container.id.replace("_container", "_input")
+  ).value = selecteditem.textContent;
+  dropdown_container.removeChild(item_title);
+  dropdown_container.prepend(item_title);
+}
+
+function CheckHover_Dropdowncontainer(Isin) {
+  IsInDropdown = Isin;
+}
 window.Resize = Resize;
 window.openTab = openTab;
 window.reload_OneTestScript = reload_OneTestScript;
+window.filterFunction = filterFunction;
+window.select_dropboxItem = select_dropboxItem;
+window.CheckHover_Dropdowncontainer = CheckHover_Dropdowncontainer;
