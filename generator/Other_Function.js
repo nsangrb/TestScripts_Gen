@@ -13,6 +13,7 @@ export {
   IsString,
   Check_Array,
   IsNumber,
+  IsPointer,
 };
 
 function clone(obj) {
@@ -88,6 +89,9 @@ function IsNumber(obj) {
   return typeof obj === "number";
 }
 
+function IsPointer(obj){
+  return (obj.match(/^\*/) || []).length > 0;
+}
 function SubStringBetween(text1, text2) {
   return this.substring(
     this.indexOf(text1) + text1.length,
@@ -96,9 +100,9 @@ function SubStringBetween(text1, text2) {
 }
 
 function Check_Array(arr) {
-  let arr_regex = /(?<arr_name>\w+)\[(?<length>[0-9]+)\]/g;
+  let arr_regex = /(?<arr_name>\w+)\[(?<length>[0-9]+)\]$/g;
   var myArray = arr_regex.exec(arr);
-  if (myArray === null) return [arr, 1];
+  if (myArray === null) return [arr, 0];
   else return [myArray.groups.arr_name, myArray.groups.length];
 }
 function ReplaceGlobally(searchTxt, replaceTxt) {
