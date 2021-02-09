@@ -1,24 +1,20 @@
+//#region includes
 import {
-  split_TestScript_func,
-  getTestGroup,
-  Get_TestScripts,
-  Get_OverviewInfo,
-  GetTestIDs,
-  GetStructEnumInfo,
   UpdateExcelInfo,
   ReadExcelInfo,
 } from "../generator/Collect_TestScript_Information.js";
 
 const Split = require("split-grid");
 const fs = require("fs");
-
-let IsInDropdown = false;
-
 const { dialog } = require("electron").remote;
+//#endregion
 
+//#region Declare variables
+
+//Constant tempalates for generating some html elements
 const pre_code_template = [
   '<div id="%ID%_tab" class="tabcontent">',
-  '<div title="Reload"> <span onclick="reload_OneTestScript(this.parentElement.id)"' +
+  '<div title="Reload"> <span onclick="reload_OneTestScript(this.parentElement.parentElement.id)"' +
     " class=" +
     '"topleft"' +
     "></span> </div>",
@@ -46,6 +42,7 @@ const dropbox_item_template = [
   "</div>\r\n",
 ].join("\r\n");
 
+//Elements in html view
 const gento_path = document.getElementById("gento_path_input");
 const browsePathtoGen_btn = document.getElementById("browsePathtoGen_btn");
 const GenTo_drd_btn = document.getElementById("GenTo_drd_btn");
@@ -64,15 +61,23 @@ const tabs = document.getElementById("tabs");
 const preview_btn = document.getElementById("preview_btn");
 const preview = document.getElementById("preview");
 
+
+//Global variables for js
 let list_testcases = [];
 let lst_items_excelPath_dropbox = [];
 let lst_items_gentoPath_dropbox = [];
+let IsInDropdown = false;
 
+//#endregion
+
+//#region Onther functions
+
+//Get absolute path (has '/' at the end)
 function GetAbsPath(path) {
   return path.replace(/[\/\\]$/, "") + "\\";
 }
 
-function Check_DropBox_Contain(lst_items, itembechecked) {
+function List_Contain(lst_items, itembechecked) {
   for (var index in lst_items) {
     if (lst_items[index].toLowerCase() === itembechecked.toLowerCase()) {
       return true;
@@ -81,22 +86,32 @@ function Check_DropBox_Contain(lst_items, itembechecked) {
   return false;
 }
 
+function Remove_AllChildNodes(div){
+  while (div.hasChildNodes()) {
+    div.removeChild(div.firstChild);
+  }
+}
+
+//Append input value to dropbox
 function Iuclude_path_Dropbox(dropbox_container, lstItems, path) {
   let abs_path = GetAbsPath(path);
+  let err = "";
   if (!fs.existsSync(path)) {
-    return "Path " + path + " NOT exist!!\r\n";
+    err = "Path " + path + " NOT exist!!\r\n";
+    return err;
   }
-  if (!Check_DropBox_Contain(lstItems, abs_path)) {
+  if (!List_Contain(lstItems, abs_path)) {
     lstItems.push(abs_path);
     let dropbox_item = dropbox_item_template.replace(/%VALUE%/g, path);
     dropbox_container.innerHTML = dropbox_item + dropbox_container.innerHTML;
   }
 
-  return "";
+  return err;
 }
+
+//Get list Testcase ID exist in Excel file
 function GetListTestID() {
   list_testcases = ReadExcelInfo(["GetListTestcase"]);
-  let gento = ReadExcelInfo(["GetPathGenerateTo"]);
 
   while (list_testID.hasChildNodes()) {
     list_testID.removeChild(list_testID.firstChild);
@@ -117,28 +132,10 @@ function GetListTestID() {
   });
 }
 
-function reload_OneTestScript(tabcontent_ID) {
-  let TestID = tabcontent_ID.replace("_tab", "");
-  let code_id = "preview_" + TestID;
-  const codeEl = document.getElementById(code_id);
-  UpdateExcelInfo(excel_path.value);
-  let [lst_testscriptsText, err] = ReadExcelInfo([
-    "GetOneTestScriptText",
-    [list_testcases, TestID],
-  ]);
-  codeEl.innerHTML = lst_testscriptsText;
-  Prism.highlightElement(codeEl);
-  log_tb.innerHTML = err;
-}
-
 function preview_TestScripts() {
+  Remove_AllChildNodes(tabs);
+  Remove_AllChildNodes(preview);
   if (document.getElementById("preview_toggle").checked === true) {
-    while (tabs.hasChildNodes()) {
-      tabs.removeChild(tabs.firstChild);
-    }
-    while (preview.hasChildNodes()) {
-      preview.removeChild(preview.firstChild);
-    }
     let [lst_testscriptsText, err] = ReadExcelInfo([
       "GetAllTestScriptText",
       list_testcases,
@@ -155,15 +152,27 @@ function preview_TestScripts() {
     if (list_testcases.length > 0) {
       document.getElementById("btn_" + list_testcases[0]).click();
     }
-  } else {
-    while (tabs.hasChildNodes()) {
-      tabs.removeChild(tabs.firstChild);
-    }
-    while (preview.hasChildNodes()) {
-      preview.removeChild(preview.firstChild);
-    }
-  }
+  } 
 }
+//#endregion
+
+//#region Event functions
+Split({
+  columnGutters: [
+    {
+      track: 1,
+      element: document.querySelector(".column_splitter"),
+    },
+  ],
+  columnMinSizes: [300],
+  rowMinSize: 50,
+  rowGutters: [
+    {
+      track: 1,
+      element: document.querySelector(".row_splitter"),
+    },
+  ],
+});
 
 ExcelPath_drd_btn.addEventListener("click", () => {
   if (excel_path_container.style.display != "block") {
@@ -174,7 +183,6 @@ ExcelPath_drd_btn.addEventListener("click", () => {
 });
 
 ExcelPath_drd_btn.addEventListener("focusout", () => {
-  let hovering_element = document;
   if (IsInDropdown) return;
   excel_path_container.style.display = "none";
 });
@@ -213,7 +221,7 @@ browseExcelPath_btn.addEventListener("click", () => {
     .catch((err) => {
       console.log(err);
       log_tb.innerHTML += err.stack;
-    });    
+    });
 });
 
 GenTo_drd_btn.addEventListener("click", () => {
@@ -225,15 +233,14 @@ GenTo_drd_btn.addEventListener("click", () => {
 });
 
 GenTo_drd_btn.addEventListener("focusout", () => {
-  let hovering_element = document;
   if (IsInDropdown) return;
   gento_path_container.style.display = "none";
 });
 
 browsePathtoGen_btn.addEventListener("click", () => {
-  let error ="";
+  let error = "";
   log_tb.innerHTML = "";
-  dialog  
+  dialog
     .showOpenDialog({
       properties: ["openDirectory"],
       defaultPath: gento_path.value,
@@ -318,7 +325,7 @@ generate_btn.addEventListener("click", () => {
 });
 
 reload_btn.addEventListener("click", () => {
-  let error ="";
+  let error = "";
   log_tb.innerHTML = "";
   try {
     error += Iuclude_path_Dropbox(
@@ -360,6 +367,21 @@ selectall_btn.addEventListener("click", () => {
   } catch (e) {}
 });
 
+function reload_OneTestScript(tabcontent_ID) {
+  let TestID = tabcontent_ID.replace("_tab", "");
+  let code_id = "preview_" + TestID;
+  const codeEl = document.getElementById(code_id);
+  UpdateExcelInfo(excel_path.value);
+  let [lst_testscriptsText, err] = ReadExcelInfo([
+    "GetOneTestScriptText",
+    [list_testcases, TestID],
+  ]);
+  codeEl.innerHTML = lst_testscriptsText;
+  Prism.highlightElement(codeEl);
+  log_tb.innerHTML = "Reload " + TestID + " Done!!\r\n";
+  log_tb.innerHTML += err;
+}
+
 function Resize() {
   let body_contain = document.getElementById("body_contain");
   let display = document.getElementById("display");
@@ -394,25 +416,6 @@ function openTab(evt, tabName) {
   evt.currentTarget.className += " active";
 }
 
-Split({
-  columnGutters: [
-    {
-      track: 1,
-      element: document.querySelector(".column_splitter"),
-    },
-  ],
-  columnMinSizes: [300],
-  rowMinSize: 50,
-  rowGutters: [
-    {
-      track: 1,
-      element: document.querySelector(".row_splitter"),
-    },
-  ],
-});
-
-function filterFunction() {}
-
 function select_dropboxItem(item_title, selecteditem) {
   let dropdown_container = item_title.parentElement;
   dropdown_container.style.display = "none";
@@ -426,9 +429,12 @@ function select_dropboxItem(item_title, selecteditem) {
 function CheckHover_Dropdowncontainer(Isin) {
   IsInDropdown = Isin;
 }
+
+//Subcribes for using funcs in html view
 window.Resize = Resize;
 window.openTab = openTab;
 window.reload_OneTestScript = reload_OneTestScript;
-window.filterFunction = filterFunction;
 window.select_dropboxItem = select_dropboxItem;
 window.CheckHover_Dropdowncontainer = CheckHover_Dropdowncontainer;
+
+//#endregion
