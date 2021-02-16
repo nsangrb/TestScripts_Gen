@@ -19,7 +19,8 @@ body {
   /* Disable Android and iOS callouts*/
 }
 
-.titlebar, .titlebar>* {
+.titlebar,
+.titlebar > * {
   font-family: Roboto, sans-serif;
   font-size: 12px;
   color: rgb(184, 184, 184);
@@ -131,7 +132,7 @@ body {
   max-height: 300px;
   overflow-y: auto;
   background-color: rgb(37, 37, 38);
-  box-shadow:  0 4px 8px 0 rgba(0, 0, 0, 0.418), 0 6px 10px 0 rgba(0, 0, 0, 0.39);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.418), 0 6px 10px 0 rgba(0, 0, 0, 0.39);
   padding: 5px;
 }
 
@@ -139,12 +140,11 @@ body {
   white-space: nowrap;
   overflow-x: hidden;
   color: rgb(138, 138, 138);
-  
 }
 
 .dropdown_container_item:hover {
   background: rgb(122, 122, 122);
-  color: rgb(218, 218, 218); 
+  color: rgb(218, 218, 218);
 }
 
 .Test_ID {
@@ -331,7 +331,7 @@ body {
 
 /* When the checkbox is checked, add a blue background */
 
-.togglebutton_type1 input:checked~.checkmark_type1 {
+.togglebutton_type1 input:checked ~ .checkmark_type1 {
   background-color: #2196f3;
 }
 
@@ -345,7 +345,7 @@ body {
 
 /* Show the checkmark when checked */
 
-.togglebutton_type1 input:checked~.checkmark_type1:after {
+.togglebutton_type1 input:checked ~ .checkmark_type1:after {
   display: block;
 }
 
@@ -393,7 +393,7 @@ body {
 
 /* When the checkbox is checked, add a blue background */
 
-.togglebutton_type2 input:checked~.checkmark_type2 {
+.togglebutton_type2 input:checked ~ .checkmark_type2 {
   border-left: 12px solid #2195f3a9;
 }
 
@@ -407,7 +407,7 @@ body {
 
 /* Show the checkmark when checked */
 
-.togglebutton_type2 input:checked~.checkmark_type2:after {
+.togglebutton_type2 input:checked ~ .checkmark_type2:after {
   display: block;
 }
 

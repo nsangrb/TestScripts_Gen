@@ -61,7 +61,6 @@ const tabs = document.getElementById("tabs");
 const preview_btn = document.getElementById("preview_btn");
 const preview = document.getElementById("preview");
 
-
 //Global variables for js
 let list_testcases = [];
 let lst_items_excelPath_dropbox = [];
@@ -86,7 +85,7 @@ function List_Contain(lst_items, itembechecked) {
   return false;
 }
 
-function Remove_AllChildNodes(div){
+function Remove_AllChildNodes(div) {
   while (div.hasChildNodes()) {
     div.removeChild(div.firstChild);
   }
@@ -97,7 +96,7 @@ function Iuclude_path_Dropbox(dropbox_container, lstItems, path) {
   let abs_path = GetAbsPath(path);
   let err = "";
   if (!fs.existsSync(path)) {
-    err = "Path " + path + " NOT exist!!\r\n";
+    err = `Path ${path} NOT exist!!\r\n`;
     return err;
   }
   if (!List_Contain(lstItems, abs_path)) {
@@ -152,7 +151,7 @@ function preview_TestScripts() {
     if (list_testcases.length > 0) {
       document.getElementById("btn_" + list_testcases[0]).click();
     }
-  } 
+  }
 }
 //#endregion
 

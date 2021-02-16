@@ -271,8 +271,8 @@ function GetAllTestScriptText(lst_testID) {
     );
     lst_testscripts[el] = testscript;
     if (tmp_err != "") {
-      console.log(el + ": \r\n" + tmp_err);
-      err += el + ": \r\n" + tmp_err + "\r\n";
+      console.log(`${el}: \r\n${tmp_err}`);
+      err += `${el}: \r\n${tmp_err}\r\n`;
     }
   });
 
@@ -294,8 +294,8 @@ function GenerateTestscripts(args) {
       Output
     );
     if (tmp_err != "") {
-      console.log(el + ": \r\n" + tmp_err);
-      err += el + ": \r\n" + tmp_err + "\r\n";
+      console.log(`${el}: \r\n${tmp_err}`);
+      err += `${el}: \r\n${tmp_err}\r\n`;
     }
   });
 
@@ -315,8 +315,8 @@ function GetOneTestScriptText(args) {
     data_requirement
   );
   if (tmp_err != "") {
-    console.log(testID_gen + ": \r\n" + tmp_err);
-    err = testID_gen + ": \r\n" + tmp_err + "\r\n";
+    console.log(`${testID_gen}: \r\n${tmp_err}`);
+    err = `${testID_gen}: \r\n${tmp_err}\r\n`;
   }
 
   return [testscript, err];

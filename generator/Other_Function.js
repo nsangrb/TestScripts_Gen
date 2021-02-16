@@ -89,7 +89,7 @@ function IsNumber(obj) {
   return typeof obj === "number";
 }
 
-function IsPointer(obj){
+function IsPointer(obj) {
   return (obj.match(/^\*/) || []).length > 0;
 }
 function SubStringBetween(text1, text2) {
