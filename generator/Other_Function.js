@@ -9,6 +9,7 @@ export {
   IsFunction,
   Is_OnlySpaces,
   SubStringBetween,
+  Upper_1st,
   xlstojson_custom,
   IsString,
   Check_Array,
@@ -92,11 +93,17 @@ function IsNumber(obj) {
 function IsPointer(obj) {
   return (obj.match(/^\*/) || []).length > 0;
 }
+
 function SubStringBetween(text1, text2) {
   return this.substring(
     this.indexOf(text1) + text1.length,
     this.indexOf(text2)
   );
+}
+
+function Upper_1st(str)
+{
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function Check_Array(arr) {
