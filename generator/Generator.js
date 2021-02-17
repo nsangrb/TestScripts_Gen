@@ -114,6 +114,7 @@ function includes_gen(data) {
 }
 
 //#endregion
+
 //#region DESCR GENERATOR
 function testdescr_gen(data) {
   let testdescr = "";
@@ -132,6 +133,7 @@ function testdescr_gen(data) {
   return [testdescr, err];
 }
 //#endregion
+
 //#region TESTMATRIX GENERATOR
 function testmatrix_gen(data) {
   let testmatrix = "";
@@ -209,6 +211,7 @@ function testmatrix_gen(data) {
   return [testmatrix, err];
 }
 //#endregion
+
 //#region  TESTCASE_GENERATOR
 function Find_match_dict(data) {
   let directiveinfo = [];
@@ -323,11 +326,11 @@ function generate_enum_array(variables_defined, enum_name) {
     for (var index in Enum_Dict[enum_name]) {
       let el = Enum_Dict[enum_name][index];
       if (!IsDefined(el["Element"])) {
-        err = `Please define enough elements in Enum ${enum_name}\r\n`;
+        err = `Please define enough elements in Enum "${enum_name}"\r\n`;
         return err;
       }
       if (!IsDefined(el["Value"])) {
-        err = `Please define enough value in Enum ${enum_name}\r\n`;
+        err = `Please define enough value in Enum "${enum_name}"\r\n`;
         return err;
       }
       if (el[Value] == 0) {
@@ -352,23 +355,26 @@ function handle_special_var(element, vars_type, variables_defined) {
   let result = "";
   let err = "";
   let data_type = "";
-  if (IsDefined(Struct_Dict[element[Options].toLowerCase()])) {
+  if (element[Directive].toLowerCase() === "args") {
+    data_type = "args";
+  } else if (IsDefined(Struct_Dict[element[Options].toLowerCase()])) {
     data_type = "struct";
   } else if (IsDefined(Enum_Dict[element[Options].toLowerCase()])) {
     data_type = "enum";
   } else {
-    let normal_datatype = Dicts["Vars"].find(
-      (_var) => _var[Directive].toLowerCase() === element[Options].toLowerCase()
+    let normal_datatype = Compare_Dict.find(
+      (_var) =>
+        _var["DataType"].toLowerCase() === element[Options].toLowerCase()
     );
-    if (IsDefined(normal_datatype)) data_type = normal_datatype[Directive];
+    if (IsDefined(normal_datatype)) data_type = "var";
   }
 
   if (data_type === "") {
-    err = `Line ${element[Line]}: Datatype ${element[Options]} is NOT defined\r\n`;
+    err = `Line ${element[Line]}: Datatype "${element[Options]}" is NOT defined\r\n`;
     return err;
   }
   if (IsDefined(vars_type[element[Signal1]])) {
-    err = `Line ${element[Line]}: Variable ${element[Signal1]} redefinition\r\n`;
+    err = `Line ${element[Line]}: Variable "${element[Signal1]}" redefinition\r\n`;
     return err;
   }
 
@@ -385,10 +391,9 @@ function handle_special_var(element, vars_type, variables_defined) {
 }
 
 function var_gen(
-  signal,
+  varname,
   datatype,
   func,
-  array_cnt,
   tabs,
   list_of_datatype,
   variables_defined,
@@ -425,7 +430,11 @@ function var_gen(
   }
   list_of_datatype[datatype] = (list_of_datatype[datatype] + 1) % max_index;
 
-  let snprintf_args = "(" + signal + ")";
+  let [signal, array_cnt] = Check_Array(varname);
+  let snprintf_args = signal;
+  if (IsPointer(signal)) {
+    snprintf_args = "(" + signal + ")";
+  }
   if (array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
@@ -456,10 +465,9 @@ function var_gen(
 }
 
 function enum_gen(
-  signal,
+  varname,
   datatype,
   func,
-  array_cnt,
   tabs,
   list_of_datatype,
   variables_defined,
@@ -497,7 +505,11 @@ function enum_gen(
   }
   list_of_datatype[datatype] = (list_of_datatype[datatype] + 1) % max_index;
 
-  let snprintf_args = "(" + signal + ")";
+  let [signal, array_cnt] = Check_Array(varname);
+  let snprintf_args = signal;
+  if (IsPointer(signal)) {
+    snprintf_args = "(" + signal + ")";
+  }
   if (array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
@@ -528,10 +540,9 @@ function enum_gen(
 }
 
 function struct_gen(
-  signal,
+  varname,
   datatype,
   func,
-  array_cnt,
   tabs,
   list_of_datatype,
   variables_defined,
@@ -540,8 +551,11 @@ function struct_gen(
   let err = "";
   let struct = "";
   let internal_variables = "";
-  let template_signal = signal;
   let struct_info = Struct_Dict[datatype];
+  let [signal, array_cnt] = Check_Array(varname);
+  let template_signal = signal;
+  let max_index = 0;
+
   if (IsPointer(signal)) {
     template_signal = "(" + template_signal + ")";
   }
@@ -563,7 +577,6 @@ function struct_gen(
   } else {
     template_signal = `${template_signal}.%STRUCT_EL%`;
   }
-  let max_index = 0;
   split_TestScript_func(getAllKeyWords, [
     struct_info,
     "DataType",
@@ -581,7 +594,6 @@ function struct_gen(
       err = `  Please define enough Variable name in Struct "${datatype}"\r\n`;
       return err;
     }
-    let [varname, cnt] = Check_Array(el["Variable name"]);
     let exec_func;
     if (IsDefined(Struct_Dict[el["DataType"]])) {
       exec_func = struct_gen;
@@ -591,10 +603,9 @@ function struct_gen(
       exec_func = var_gen;
     }
     let result = exec_func(
-      template_signal.replace("%STRUCT_EL%", varname),
+      template_signal.replace("%STRUCT_EL%", el["Variable name"]),
       el["DataType"],
       func,
-      cnt,
       tabs,
       list_of_datatype,
       variables_defined,
@@ -618,6 +629,48 @@ function struct_gen(
   return [struct, internal_variables, max_index];
 }
 
+function args_gen(
+  vars_type,
+  lst_varnames,
+  func,
+  tabs,
+  list_of_datatype,
+  variables_defined,
+  Isinit
+) {
+  let testgen = "";
+  let internal_variables = "";
+  let max_idx = 0;
+  let err = "";
+  for (var index in lst_varnames) {
+    let varname = lst_varnames[index];
+    let VarName = Object.keys(vars_type).find(
+      (el) => el.toLowerCase() === varname
+    );
+    if (!IsDefined(VarName)) {
+      err += `"${varname}" is not declared!!\r\n`;
+      continue;
+    }
+    let var_info = vars_type[VarName].split("|");
+    let result = eval(`${var_info[1]}_gen`)(
+      VarName,
+      var_info[0],
+      func,
+      tabs,
+      list_of_datatype,
+      variables_defined,
+      Isinit
+    );
+    if (IsString(result)) err += result;
+    let [tmp_testgen, tmp_internal_variables, tmp_max_idx] = result;
+    testgen += tmp_testgen;
+    internal_variables += tmp_internal_variables;
+    if (max_idx < tmp_max_idx) max_idx = tmp_max_idx;
+  }
+  if (err != "") return err;
+  return [testgen, internal_variables, max_idx];
+}
+
 function special_directive(
   behavior,
   type,
@@ -627,35 +680,31 @@ function special_directive(
   variables_defined,
   mainIDX
 ) {
+  let arg1, arg2;
   if (!IsDefined(vars_type[element[Signal1]])) {
-    return [
-      "",
-      "",
-      0,
-      `Line ${element[Line]}: "${element[Signal1]}" is not declared!!\r\n`,
-    ];
+    return `Line ${element[Line]}: "${element[Signal1]}" is not declared!!\r\n`;
   }
   let var_info = vars_type[element[Signal1]].split("|");
   if (var_info[1] != type) {
-    return [
-      "",
-      "",
-      0,
-      `Line ${element[Line]}: "${element[Signal1]}" is not ${type}!!\r\n`,
-    ];
+    return `Line ${element[Line]}: "${element[Signal1]}" is "${var_info[1]}", Not "${type}"!!\r\n`;
   }
-  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
-  let result = eval(`${type}_gen`)(
-    var_name,
-    var_info[0],
+  if (type === "args") {
+    arg1 = vars_type;
+    arg2 = var_info[0].split(",");
+  } else {
+    arg1 = element[Signal1];
+    arg2 = var_info[0];
+  }
+  let result = eval(`${var_info[1]}_gen`)(
+    arg1,
+    arg2,
     Upper_1st(behavior),
-    arr_cnt,
     tabs,
     [],
     variables_defined,
-    false
+    element[Value]
   );
-  if (IsString(result)) return result;
+  if (IsString(result)) return `Line ${element[Line]}:\r\n${result}`;
   let [testgen, internal_variables, max_idx] = result;
   testgen = testgen.replace(/%MAIN_IDX%/g, mainIDX);
   return [testgen, internal_variables, max_idx];
@@ -779,7 +828,7 @@ function testcase_gen(data, key, variables_defined) {
         );
 
         if (IsString(tmp_result)) {
-          err += `Line ${element[Line]}:\r\n${tmp_result}`;
+          err += tmp_result;
           continue;
         }
         let [tmp_Testcase, tmp_internal, tmp_maxIDX] = tmp_result;

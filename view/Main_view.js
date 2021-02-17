@@ -144,7 +144,7 @@ function preview_TestScripts() {
       tabs.innerHTML += button_tab_template.replace(/%ID%/g, item) + "\r\n";
       preview.innerHTML += pre_code_template
         .replace(/%ID%/g, item)
-        .replace("%CODE%", lst_testscriptsText[item].replace(/</g,"&lt;"));
+        .replace("%CODE%", lst_testscriptsText[item].replace(/</g, "&lt;"));
       const preview_tb = document.getElementById("preview_" + item);
       Prism.highlightElement(preview_tb);
     });
@@ -196,6 +196,7 @@ browseExcelPath_btn.addEventListener("click", () => {
     })
     .then((result) => {
       if (result && result.canceled === false) {
+        Resize();
         excel_path.value = result.filePaths;
         UpdateExcelInfo(excel_path.value);
         let gento = ReadExcelInfo(["GetPathGenerateTo"]);
@@ -376,7 +377,7 @@ function reload_OneTestScript(tabcontent_ID) {
     "GetOneTestScriptText",
     [list_testcases, TestID],
   ]);
-  codeEl.innerHTML = lst_testscriptsText.replace(/</g,"&lt;");
+  codeEl.innerHTML = lst_testscriptsText.replace(/</g, "&lt;");
   Prism.highlightElement(codeEl);
   log_tb.innerHTML = "Reload " + TestID + " Done!!\r\n";
   log_tb.innerHTML += err;

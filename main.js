@@ -8,7 +8,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
-    // frame: false,
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -19,7 +19,7 @@ function createWindow() {
   win.loadFile("view/Main_view.html");
 
   //Open the DevTools.
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
 
   var menu = Menu.buildFromTemplate([
     {
@@ -27,13 +27,30 @@ function createWindow() {
       submenu: [
         { label: "Theme", submenu: [{ label: "Dark" }, { label: "Light" }] },
         {
-          label: "About",
+          label: "Toggle DevTools",
+          accelerator: "Alt+Ctrl+D",
           click() {
-            shell.openPath("C:\\");
+            BrowserWindow.getFocusedWindow().toggleDevTools();
           },
         },
         {
+          label: "About",
+          click() {
+            const about = new BrowserWindow({
+              width: 300,
+              height: 150,
+              frame: false,
+              resizable: false,
+            });
+            about.loadFile("view/About_view.html");
+          },
+        },
+        {
+          type: "separator",
+        },
+        {
           label: "Exit",
+          accelerator: "Alt+F4",
           click() {
             app.quit();
           },

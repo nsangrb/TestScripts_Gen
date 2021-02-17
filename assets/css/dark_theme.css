@@ -202,7 +202,7 @@ body {
 }
 
 .log_contain {
-  padding-left: 5px;
+  padding-left: 15px;
   background-color: rgb(17, 17, 17);
   overflow: hidden;
 }
