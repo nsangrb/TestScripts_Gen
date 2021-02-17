@@ -144,7 +144,7 @@ function preview_TestScripts() {
       tabs.innerHTML += button_tab_template.replace(/%ID%/g, item) + "\r\n";
       preview.innerHTML += pre_code_template
         .replace(/%ID%/g, item)
-        .replace("%CODE%", lst_testscriptsText[item]);
+        .replace("%CODE%", lst_testscriptsText[item].replace(/</g,"&lt;"));
       const preview_tb = document.getElementById("preview_" + item);
       Prism.highlightElement(preview_tb);
     });
@@ -371,11 +371,12 @@ function reload_OneTestScript(tabcontent_ID) {
   let code_id = "preview_" + TestID;
   const codeEl = document.getElementById(code_id);
   UpdateExcelInfo(excel_path.value);
+  list_testcases = ReadExcelInfo(["GetListTestcase"]);
   let [lst_testscriptsText, err] = ReadExcelInfo([
     "GetOneTestScriptText",
     [list_testcases, TestID],
   ]);
-  codeEl.innerHTML = lst_testscriptsText;
+  codeEl.innerHTML = lst_testscriptsText.replace(/</g,"&lt;");
   Prism.highlightElement(codeEl);
   log_tb.innerHTML = "Reload " + TestID + " Done!!\r\n";
   log_tb.innerHTML += err;
