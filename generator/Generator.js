@@ -10,6 +10,7 @@ import {
   IsNumber,
   IsPointer,
   ReplaceGlobally,
+  Upper_1st,
   Check_Array,
 } from "./Other_Function.js";
 import {
@@ -275,6 +276,7 @@ function generate_var(element, Dict, variables, tabs) {
   }
   return [global_variables, internal_variables];
 }
+
 function generate_func(element, Dict, variables_defined, tabs) {
   let internal_variables = "";
   let Testgen = "";
@@ -310,7 +312,7 @@ function generate_func(element, Dict, variables_defined, tabs) {
   return [Testgen, internal_variables, tabs];
 }
 
-function generate_enum_var(variables_defined, enum_name) {
+function generate_enum_array(variables_defined, enum_name) {
   let internal_variables = "";
   let err = "";
   if (!variables_defined.includes(enum_name + "_value")) {
@@ -345,7 +347,8 @@ function generate_enum_var(variables_defined, enum_name) {
   }
   return [internal_variables];
 }
-function generate_special_var(element, vars_type, variables_defined) {
+
+function handle_special_var(element, vars_type, variables_defined) {
   let result = "";
   let err = "";
   let data_type = "";
@@ -373,7 +376,7 @@ function generate_special_var(element, vars_type, variables_defined) {
     element[Options].toLowerCase() + "|" + data_type;
 
   if (data_type === "enum") {
-    result = generate_enum_var(
+    result = generate_enum_array(
       variables_defined,
       element[Options].toLowerCase()
     );
@@ -381,39 +384,152 @@ function generate_special_var(element, vars_type, variables_defined) {
   return result;
 }
 
-function enum_gen() {
-  let result = generate_enum_var(variables_defined, el["DataType"]);
-  if (IsString(result)) {
-    err = result;
-    return err;
+function var_gen(
+  signal,
+  datatype,
+  func,
+  array_cnt,
+  tabs,
+  list_of_datatype,
+  variables_defined,
+  Isinit
+) {
+  let vars = "";
+  let internal_variables = "";
+  let value_compare = "";
+  let index_level = (tabs.match(/\t/g) || []).length - 1;
+  let find_result = Compare_Dict.find((item) => item["DataType"] === datatype);
+  if (!IsDefined(find_result)) {
+    return `  NOT defined Datatype "${datatype}" in Compare sheet and Struct-Enum sheet!!\r\n`;
   }
-  internal_variables += result[0];
+  if (!IsDefined(find_result[func])) {
+    return `  NOT defined field "${func}" for Datatype "${datatype}"!! Please check Compare sheet!!\r\n`;
+  }
+  if (!IsDefined(find_result["Compare"])) {
+    return `  NOT defined field "Compare" for Datatype "${datatype}"!! Please check Compare sheet!!\r\n`;
+  }
+  let Function = find_result[func];
+  let regex = /%(?<cnt>[0-9])/g;
+  let max_index = Number(regex.exec(find_result["Compare"]).groups.cnt);
   let _idx = "";
-  if (list_of_datatype[el["DataType"]] === 0) {
+  if (!IsDefined(list_of_datatype[datatype])) list_of_datatype[datatype] = 0;
+  if (list_of_datatype[datatype] === 0) {
     _idx = "%MAIN_IDX%";
   } else {
-    _idx = `%MAIN_IDX%+${list_of_datatype[el["DataType"]]}`;
-  }
-
-  let tmp_maxindex = Enum_Dict[el["DataType"]].length;
-  if (max_index < tmp_maxindex) max_index = tmp_maxindex;
-  if (func === "Check") Function = "funcIDE_ReadVariableAndCheck";
-  else if (func === "Set") Function = "funcIDE_WriteVariable";
-  else {
-    ///DO NOTHING
+    _idx = `%MAIN_IDX%+${list_of_datatype[datatype]}`;
   }
   if (IsNumber(Isinit)) {
     value_compare = Isinit;
   } else {
-    value_compare = `${el["DataType"]}_value[(${_idx})%${tmp_maxindex}]`;
+    value_compare = find_result["Compare"].replace("%INDEX%", _idx);
   }
-  list_of_datatype[el["DataType"]] =
-    (list_of_datatype[el["DataType"]] + 1) % tmp_maxindex;
+  list_of_datatype[datatype] = (list_of_datatype[datatype] + 1) % max_index;
+
+  let snprintf_args = "(" + signal + ")";
+  if (array_cnt > 1) {
+    if (!variables_defined.includes("arr_index_" + index_level)) {
+      variables_defined.push("arr_index_" + index_level);
+      internal_variables += `\tint arr_index_${index_level};\r\n`;
+    }
+    vars += `${tabs}for (arr_index_${index_level} = 0; arr_index_${index_level} < ${array_cnt}; arr_index_${index_level}++) {\r\n`;
+    tabs += "\t";
+    index_level++;
+    snprintf_args += "[%d]";
+  }
+  snprintf_args = '"' + snprintf_args + '"';
+  let cnt_index = (snprintf_args.match(/\[%d\]/g) || []).length;
+  if (cnt_index > 0) {
+    for (var i = cnt_index; i > 0; i--) {
+      snprintf_args += `, arr_index_${index_level - i}`;
+    }
+    vars += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
+    vars += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
+    if (array_cnt > 1) {
+      tabs = tabs.replace("\t", "");
+      vars += `${tabs}}\r\n`;
+      index_level--;
+    }
+  } else {
+    vars += `${tabs}${Function}("${signal}", ${value_compare});\r\n`;
+  }
+  return [vars, internal_variables, max_index];
+}
+
+function enum_gen(
+  signal,
+  datatype,
+  func,
+  array_cnt,
+  tabs,
+  list_of_datatype,
+  variables_defined,
+  Isinit
+) {
+  let err = "";
+  let enums = "";
+  let internal_variables = "";
+  let Function = "";
+  let value_compare = "";
+  let index_level = (tabs.match(/\t/g) || []).length - 1;
+  let result = generate_enum_array(variables_defined, datatype);
+  if (IsString(result)) {
+    err = result;
+    return `  ${err}`;
+  }
+  internal_variables += result[0];
+  let _idx = "";
+  if (!IsDefined(list_of_datatype[datatype])) list_of_datatype[datatype] = 0;
+  if (list_of_datatype[datatype] === 0) {
+    _idx = "%MAIN_IDX%";
+  } else {
+    _idx = `%MAIN_IDX%+${list_of_datatype[datatype]}`;
+  }
+
+  let max_index = Enum_Dict[datatype].length;
+
+  if (func === "Check") Function = "funcIDE_ReadVariableAndCheck";
+  else if (func === "Set") Function = "funcIDE_WriteVariable";
+
+  if (IsNumber(Isinit)) {
+    value_compare = Isinit;
+  } else {
+    value_compare = `${datatype}_value[(${_idx})%${max_index}]`;
+  }
+  list_of_datatype[datatype] = (list_of_datatype[datatype] + 1) % max_index;
+
+  let snprintf_args = "(" + signal + ")";
+  if (array_cnt > 1) {
+    if (!variables_defined.includes("arr_index_" + index_level)) {
+      variables_defined.push("arr_index_" + index_level);
+      internal_variables += `\tint arr_index_${index_level};\r\n`;
+    }
+    enums += `${tabs}for (arr_index_${index_level} = 0; arr_index_${index_level} < ${array_cnt}; arr_index_${index_level}++) {\r\n`;
+    tabs += "\t";
+    index_level++;
+    snprintf_args += "[%d]";
+  }
+  snprintf_args = '"' + snprintf_args + '"';
+  let cnt_index = (snprintf_args.match(/\[%d\]/g) || []).length;
+  if (cnt_index > 0) {
+    for (var i = cnt_index; i > 0; i--) {
+      snprintf_args += `, arr_index_${index_level - i}`;
+    }
+    enums += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
+    enums += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
+    if (array_cnt > 1) {
+      tabs = tabs.replace("\t", "");
+      enums += `${tabs}}\r\n`;
+      index_level--;
+    }
+  } else {
+    enums += `${tabs}${Function}("${signal}", ${value_compare});\r\n`;
+  }
+  return [enums, internal_variables, max_index];
 }
 
 function struct_gen(
   signal,
-  struct_info,
+  datatype,
   func,
   array_cnt,
   tabs,
@@ -425,7 +541,7 @@ function struct_gen(
   let struct = "";
   let internal_variables = "";
   let template_signal = signal;
-
+  let struct_info = Struct_Dict[datatype];
   if (IsPointer(signal)) {
     template_signal = "(" + template_signal + ")";
   }
@@ -456,269 +572,92 @@ function struct_gen(
     if (!IsDefined(list_of_datatype[el])) list_of_datatype[el] = 0;
   });
   for (var index in struct_info) {
-    let Function = "";
     let el = struct_info[index];
-    let Is_vardefined = false;
-    let value_compare = "";
     if (!IsDefined(el["DataType"])) {
-      err = "Please define enough DataType in Struct\r\n";
+      err = `  Please define enough DataType in Struct "${datatype}"\r\n`;
       return err;
     }
     if (!IsDefined(el["Variable name"])) {
-      err = "Please define enough Variable name in Struct\r\n";
+      err = `  Please define enough Variable name in Struct "${datatype}"\r\n`;
       return err;
     }
     let [varname, cnt] = Check_Array(el["Variable name"]);
+    let exec_func;
     if (IsDefined(Struct_Dict[el["DataType"]])) {
-      Is_vardefined = true;
-      let result = struct_gen(
-        template_signal.replace("%STRUCT_EL%", varname),
-        Struct_Dict[el["DataType"]],
-        func,
-        cnt,
-        tabs,
-        list_of_datatype,
-        variables_defined,
-        Isinit
-      );
-      if (IsString(result)) {
-        err = result;
-        return err;
-      }
-      let [tmp_struct, tmp_internal_variables, tmp_maxindex] = result;
-      internal_variables += tmp_internal_variables;
-      struct += tmp_struct;
-      if (max_index < tmp_maxindex) max_index = tmp_maxindex;
-      continue;
+      exec_func = struct_gen;
     } else if (IsDefined(Enum_Dict[el["DataType"]])) {
-      Is_vardefined = true;
-      let result = generate_enum_var(variables_defined, el["DataType"]);
-      if (IsString(result)) {
-        err = result;
-        return err;
-      }
-      internal_variables += result[0];
-      let _idx = "";
-      if (list_of_datatype[el["DataType"]] === 0) {
-        _idx = "%MAIN_IDX%";
-      } else {
-        _idx = `%MAIN_IDX%+${list_of_datatype[el["DataType"]]}`;
-      }
-
-      let tmp_maxindex = Enum_Dict[el["DataType"]].length;
-      if (max_index < tmp_maxindex) max_index = tmp_maxindex;
-      if (func === "Check") Function = "funcIDE_ReadVariableAndCheck";
-      else if (func === "Set") Function = "funcIDE_WriteVariable";
-      else {
-        ///DO NOTHING
-      }
-      if (IsNumber(Isinit)) {
-        value_compare = Isinit;
-      } else {
-        value_compare = `${el["DataType"]}_value[(${_idx})%${tmp_maxindex}]`;
-      }
-      list_of_datatype[el["DataType"]] =
-        (list_of_datatype[el["DataType"]] + 1) % tmp_maxindex;
+      exec_func = enum_gen;
     } else {
-      let find_result = Compare_Dict.find(
-        (item) => item["DataType"] === el["DataType"]
-      );
+      exec_func = var_gen;
+    }
+    let result = exec_func(
+      template_signal.replace("%STRUCT_EL%", varname),
+      el["DataType"],
+      func,
+      cnt,
+      tabs,
+      list_of_datatype,
+      variables_defined,
+      Isinit
+    );
 
-      if (IsDefined(find_result)) {
-        Is_vardefined = true;
-        Function = find_result[func];
-        let regex = /%(?<cnt>[0-9])/g;
-        let tmp_maxindex = Number(
-          regex.exec(find_result["Compare"]).groups.cnt
-        );
-        if (max_index < tmp_maxindex) max_index = tmp_maxindex;
-        let _idx = "";
-        if (list_of_datatype[el["DataType"]] === 0) {
-          _idx = "%MAIN_IDX%";
-        } else {
-          _idx = `%MAIN_IDX%+${list_of_datatype[el["DataType"]]}`;
-        }
-        if (IsNumber(Isinit)) {
-          value_compare = Isinit;
-        } else {
-          value_compare = find_result["Compare"].replace("%INDEX%", _idx);
-        }
-        list_of_datatype[el["DataType"]] =
-          (list_of_datatype[el["DataType"]] + 1) % tmp_maxindex;
-      } else {
-        err += `NOT defined Array to Compare for Datatype ${el["DaraType"]}!!\r\n`;
-      }
+    if (IsString(result)) {
+      err += result;
+      continue;
     }
-    if (!Is_vardefined) {
-      err += `Datatype ${el["DataType"]} is NOT defined!!\r\n`;
-      return err;
-    }
-    let snprintf_args =
-      "(" + template_signal.replace("%STRUCT_EL%", varname) + ")";
-    if (cnt > 1) {
-      if (!variables_defined.includes("arr_index_" + index_level)) {
-        variables_defined.push("arr_index_" + index_level);
-        internal_variables += `\tint arr_index_${index_level};\r\n`;
-      }
-      struct += `${tabs}for (arr_index_${index_level} = 0; arr_index_${index_level} < ${cnt}; arr_index_${index_level}++) {\r\n`;
-      tabs += "\t";
-      index_level++;
-      snprintf_args += "[%d]";
-    }
-    snprintf_args = '"' + snprintf_args + '"';
-    let cnt_index = (snprintf_args.match(/\[%d\]/g) || []).length;
-    if (cnt_index > 0) {
-      for (var i = cnt_index; i > 0; i--) {
-        snprintf_args += `, arr_index_${index_level - i}`;
-      }
-      struct += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
-      struct += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
-      if (cnt > 1) {
-        tabs = tabs.replace("\t", "");
-        struct += `${tabs}}\r\n`;
-        index_level--;
-      }
-    } else {
-      struct += `${tabs}${Function}(${template_signal.replace(
-        "%STRUCT_EL%",
-        varname
-      )}, ${value_compare});\r\n`;
-    }
+
+    let [tmp_struct, tmp_internal_variables, tmp_maxindex] = result;
+    internal_variables += tmp_internal_variables;
+    struct += tmp_struct;
+    if (max_index < tmp_maxindex) max_index = tmp_maxindex;
   }
   struct += tabs.replace("\t", "");
   if (array_cnt > 0) struct += "}\r\n";
   else struct += "\r\n";
+  if (err != "") return err;
   return [struct, internal_variables, max_index];
 }
 
-function checkdefaultstruct(element, vars_type, tabs, variables_defined) {
-  let testgen = "";
-  let internal_variables = "";
-  if (!IsDefined(vars_type[element[Signal1]])) {
-    return `Line ${element[Line]}: Variable "${element[Signal1]}" is not declared!!\r\n`;
-  }
-  let var_info = vars_type[element[Signal1]].split("|");
-  if (var_info[1] != "struct") {
-    return `Line ${element[Line]}: Variable "${element[Signal1]}" is not struct!!\r\n`;
-  }
-  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
-  let max_idx;
-  [testgen, internal_variables, max_idx] = struct_gen(
-    var_name,
-    Struct_Dict[var_info[0]],
-    "Check",
-    arr_cnt,
-    tabs,
-    [],
-    variables_defined,
-    Number(element[Value])
-  );
-  return [testgen, internal_variables];
-}
-
-function checkvaluestruct(
+function special_directive(
+  behavior,
+  type,
   element,
   vars_type,
   tabs,
   variables_defined,
   mainIDX
 ) {
-  let testgen = "";
-  let internal_variables = "";
   if (!IsDefined(vars_type[element[Signal1]])) {
-    return `Line ${element[Line]}: Variable ${element[Signal1]} is not declared!!\r\n`;
+    return [
+      "",
+      "",
+      0,
+      `Line ${element[Line]}: "${element[Signal1]}" is not declared!!\r\n`,
+    ];
   }
   let var_info = vars_type[element[Signal1]].split("|");
-  if (var_info[1] != "struct") {
-    return `Line ${element[Line]}: Variable ${element[Signal1]} is not struct!!\r\n`;
+  if (var_info[1] != type) {
+    return [
+      "",
+      "",
+      0,
+      `Line ${element[Line]}: "${element[Signal1]}" is not ${type}!!\r\n`,
+    ];
   }
   let [var_name, arr_cnt] = Check_Array(element[Signal1]);
-  let max_idx;
-  [testgen, internal_variables, max_idx] = struct_gen(
+  let result = eval(`${type}_gen`)(
     var_name,
-    Struct_Dict[var_info[0]],
-    "Check",
+    var_info[0],
+    Upper_1st(behavior),
     arr_cnt,
     tabs,
     [],
     variables_defined,
     false
   );
-
+  if (IsString(result)) return result;
+  let [testgen, internal_variables, max_idx] = result;
   testgen = testgen.replace(/%MAIN_IDX%/g, mainIDX);
-  return [testgen, internal_variables, max_idx];
-}
-
-function setvaluestruct(element, vars_type, tabs, variables_defined, mainIDX) {
-  let testgen = "";
-  let internal_variables = "";
-  if (!IsDefined(vars_type[element[Signal1]])) {
-    return `Line ${element[Line]}: Variable ${element[Signal1]} is not declared!!\r\n`;
-  }
-  let var_info = vars_type[element[Signal1]].split("|");
-  if (var_info[1] != "struct") {
-    return `Line ${element[Line]}: Variable ${element[Signal1]} is not struct!!\r\n`;
-  }
-  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
-  let max_idx;
-  [testgen, internal_variables, max_idx] = struct_gen(
-    var_name,
-    Struct_Dict[var_info[0]],
-    "Set",
-    arr_cnt,
-    tabs,
-    [],
-    variables_defined,
-    false
-  );
-  testgen = testgen.replace(/%MAIN_IDX%/g, mainIDX);
-  return [testgen, internal_variables, max_idx];
-}
-
-function checkdefaultenum(
-  element,
-  structs,
-  enums,
-  tabs,
-  variables_defined,
-  mainIDX
-) {}
-
-function checkvalueenum(
-  element,
-  structs,
-  enums,
-  tabs,
-  variables_defined,
-  mainIDX
-) {}
-
-function setvalueenum(
-  element,
-  structs,
-  enums,
-  tabs,
-  variables_defined,
-  mainIDX
-) {
-  let testgen = "";
-  let internal_variables = "";
-  if (!IsDefined(enums[element[Signal1]])) {
-    return `Line ${element[Line]} : Variable ${element[Signal1]} is not declared!!\r\n`;
-  }
-  let [var_name, arr_cnt] = Check_Array(element[Signal1]);
-  let max_idx;
-  [testgen, internal_variables, max_idx] = enum_gen(
-    var_name,
-    Enum_Dict[enums[element[Signal1]]],
-    "Set",
-    arr_cnt,
-    tabs,
-    [],
-    variables_defined,
-    false
-  );
-  testgen += testgen.replace(/%MAIN_IDX%/g, mainIDX);
   return [testgen, internal_variables, max_idx];
 }
 
@@ -791,7 +730,7 @@ function testcase_gen(data, key, variables_defined) {
       }
       internal_variables += tmp_internal;
     } else if (type === "Vars_special") {
-      let tmp_result = generate_special_var(
+      let tmp_result = handle_special_var(
         element,
         vars_type,
         variables_defined
@@ -826,14 +765,29 @@ function testcase_gen(data, key, variables_defined) {
         SpecialTestgen = "";
         continue;
       }
+      let regex = /(?<behavior>\w+)(default|value)(?<type>\w+)/;
+      let split_directive = regex.exec(element[Directive].toLowerCase());
+      if (split_directive) {
+        let tmp_result = special_directive(
+          split_directive.groups.behavior,
+          split_directive.groups.type,
+          element,
+          vars_type,
+          tabs,
+          variables_defined,
+          mainIDX
+        );
 
-      let [tmp_Testcase, tmp_internal, tmp_maxIDX] = eval(
-        element[Directive].toLowerCase()
-      )(element, vars_type, tabs, variables_defined, mainIDX);
-      if (tmp_maxIDX > MaxIDX) MaxIDX = tmp_maxIDX;
-      SpecialTestgen += tmp_Testcase;
+        if (IsString(tmp_result)) {
+          err += `Line ${element[Line]}:\r\n${tmp_result}`;
+          continue;
+        }
+        let [tmp_Testcase, tmp_internal, tmp_maxIDX] = tmp_result;
+        if (tmp_maxIDX > MaxIDX) MaxIDX = tmp_maxIDX;
+        SpecialTestgen += tmp_Testcase;
 
-      internal_variables += tmp_internal;
+        internal_variables += tmp_internal;
+      }
     }
   }
   return [Testgen, global_variables, internal_variables, err];
