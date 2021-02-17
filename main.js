@@ -8,7 +8,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
-    //frame: false,
+    // frame: false,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -16,7 +16,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile("view/Testscripts_generator.html");
+  win.loadFile("view/Main_view.html");
 
   //Open the DevTools.
   win.webContents.openDevTools();
@@ -25,7 +25,7 @@ function createWindow() {
     {
       label: "Menu",
       submenu: [
-        { label: "Theme", submenu: [{ label: "Dark" }, { label: "Lght" }] },
+        { label: "Theme", submenu: [{ label: "Dark" }, { label: "Light" }] },
         {
           label: "About",
           click() {
