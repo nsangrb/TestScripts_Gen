@@ -36,7 +36,14 @@ import {
   Regression_region,
 } from "./Config.js";
 
-export { TestScript, Genarate_TestScript, Update_Dict, Update_OverviewInfo };
+export {
+  TestScript,
+  Generate_TestScript,
+  MainTestScript,
+  Generate_MainTestScript,
+  Update_Dict,
+  Update_OverviewInfo,
+};
 
 String.prototype.ReplaceGlobally = ReplaceGlobally;
 Number.prototype.Get_decrease = Get_decrease;
@@ -71,6 +78,13 @@ const List_replace_keywords = [
   "%INTERNAL_VARS%",
   "%TEST_MATRIX%",
   "%TEST_REGION%",
+];
+
+const List_replace_mainTest_keywords = [
+  "%INCLUDES%",
+  "%COMP%",
+  "%COMPONENT%",
+  "%TEST_IDS%",
 ];
 
 const List_Overview_Info = {
@@ -844,7 +858,7 @@ function testcase_gen(data, key, variables_defined) {
 //#endregion
 
 //#region COLLECT DATA AND GENERRATE FOR EACH SHEET
-function genarate_with_testSpec_data(testID, data, List_gen) {
+function generate_with_testSpec_data(testID, data, List_gen) {
   let err = "";
   let variables_defined = [];
   variables_defined.push("i");
@@ -900,7 +914,7 @@ function genarate_with_testSpec_data(testID, data, List_gen) {
   });
   return err;
 }
-function genarate_with_regression_data(testID, data, List_gen) {
+function generate_with_regression_data(testID, data, List_gen) {
   let err = "";
   const List_replace_keywords = ["%AUTHOR%", "%DATE%", "%VERSION%", "%NOTE%"];
   data.forEach((element) => {
@@ -926,7 +940,7 @@ function genarate_with_regression_data(testID, data, List_gen) {
   });
   return err;
 }
-function genarate_with_requirement_data(testID, data, List_gen) {
+function generate_with_requirement_data(testID, data, List_gen) {
   let err = "";
   let filter_data = data.filter((item) => IsDefined(item[testID]));
   if (filter_data.length === 0)
@@ -994,9 +1008,9 @@ function TestScript(testID, TestSpec_data, Regression_data, Req_data) {
     testmatrix_st: "",
     testscript: "",
   };
-  err += genarate_with_testSpec_data(testID, TestSpec_data, List_gen);
-  err += genarate_with_regression_data(testID, Regression_data, List_gen);
-  err += genarate_with_requirement_data(testID, Req_data, List_gen);
+  err += generate_with_testSpec_data(testID, TestSpec_data, List_gen);
+  err += generate_with_regression_data(testID, Regression_data, List_gen);
+  err += generate_with_requirement_data(testID, Req_data, List_gen);
   try {
     var TestScripts_FULL = readFileSync("./TestScripts_Template.can", "utf8");
   } catch (e) {
@@ -1009,7 +1023,7 @@ function TestScript(testID, TestSpec_data, Regression_data, Req_data) {
   return [TestScripts_FULL, err];
 }
 
-function Genarate_TestScript(
+function Generate_TestScript(
   testID,
   TestSpec_data,
   Regression_data,
@@ -1031,6 +1045,52 @@ function Genarate_TestScript(
   writeFile(
     path.join(gen_path, testID + ".can"),
     TestScripts_FULL,
+    function (error) {
+      if (error) err += error.stack + "\r\n";
+    }
+  );
+
+  return err;
+}
+
+function MainTestScript(lsi_testID_gen) {
+  let err = "";
+  const List_gen = {
+    includes: "",
+    Comp: List_Overview_Info["Component Shortcut"],
+    Component: List_Overview_Info["Component"],
+    testids: "",
+  };
+
+  lsi_testID_gen.forEach((el) => {
+    List_gen["includes"] += `\t#include "${el}.can"\r\n`;
+    List_gen["testids"] += `\t${el}();\r\n`;
+  });
+  try {
+    var mainTestScript = readFileSync(
+      "./TestScripts_main_Template.can",
+      "utf8"
+    );
+  } catch (e) {
+    err += e.stack + "\r\n";
+  }
+  mainTestScript = mainTestScript.ReplaceGlobally(
+    List_replace_mainTest_keywords,
+    Object.values(List_gen)
+  );
+  return [mainTestScript, err];
+}
+function Generate_MainTestScript(lsi_testID_gen, Output) {
+  let [mainTestScript, err] = MainTestScript(lsi_testID_gen);
+  let gen_path = "";
+  if (IsDefined(Output)) {
+    gen_path = Output;
+  } else {
+    gen_path = List_Overview_Info["Output"];
+  }
+  writeFile(
+    path.join(gen_path, List_Overview_Info["Component Shortcut"] + ".can"),
+    mainTestScript,
     function (error) {
       if (error) err += error.stack + "\r\n";
     }
