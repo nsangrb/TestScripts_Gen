@@ -14,7 +14,7 @@ const { dialog } = require("electron").remote;
 //Constant tempalates for generating some html elements
 const pre_code_template = [
   '<div id="%ID%_tab" class="tabcontent">',
-  '<div title="Reload"> <span onclick="reload_OneTestScript(this.parentElement.parentElement.id)"' +
+  '<div title="Reload"> <span onclick="%RELOAD_FUNC%(this.parentElement.parentElement.id)"' +
     " class=" +
     '"topleft"' +
     "></span> </div>",
@@ -63,6 +63,7 @@ const preview = document.getElementById("preview");
 
 //Global variables for js
 let list_testcases = [];
+let Comp_Shortname = "";
 let lst_items_excelPath_dropbox = [];
 let lst_items_gentoPath_dropbox = [];
 let IsInDropdown = false;
@@ -111,24 +112,30 @@ function Iuclude_path_Dropbox(dropbox_container, lstItems, path) {
 //Get list Testcase ID exist in Excel file
 function GetListTestID() {
   list_testcases = ReadExcelInfo(["GetListTestcase"]);
+  Comp_Shortname = ReadExcelInfo(["GetCompShortName"]);
 
-  while (list_testID.hasChildNodes()) {
-    list_testID.removeChild(list_testID.firstChild);
+  Remove_AllChildNodes(list_testID);
+  if (Comp_Shortname != "") {
+    list_testID.appendChild(CreateTestID_Element(Comp_Shortname));
   }
   list_testcases.forEach((item) => {
-    let label = document.createElement("label");
-    label.classList.add("togglebutton_type2");
-    label.textContent = item;
-    let input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = true;
-    input.id = item;
-    let span = document.createElement("span");
-    span.classList.add("checkmark_type2");
-    label.appendChild(input);
-    label.appendChild(span);
-    list_testID.appendChild(label);
+    list_testID.appendChild(CreateTestID_Element(item));
   });
+}
+
+function CreateTestID_Element(item) {
+  let label = document.createElement("label");
+  label.classList.add("togglebutton_type2");
+  label.textContent = item;
+  let input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = true;
+  input.id = item;
+  let span = document.createElement("span");
+  span.classList.add("checkmark_type2");
+  label.appendChild(input);
+  label.appendChild(span);
+  return label;
 }
 
 function preview_TestScripts() {
@@ -143,13 +150,38 @@ function preview_TestScripts() {
     list_testcases.forEach((item) => {
       tabs.innerHTML += button_tab_template.replace(/%ID%/g, item) + "\r\n";
       preview.innerHTML += pre_code_template
+        .replace(/%RELOAD_FUNC%/, "reload_OneTestScript")
         .replace(/%ID%/g, item)
         .replace("%CODE%", lst_testscriptsText[item].replace(/</g, "&lt;"));
       const preview_tb = document.getElementById("preview_" + item);
       Prism.highlightElement(preview_tb);
     });
+
+    if (Comp_Shortname != "") {
+      let list_selected_TestID = [];
+      list_testcases.forEach((test) => {
+        if (document.getElementById(test).checked) {
+          list_selected_TestID.push(test);
+        }
+      });
+      let [MaintestscriptText, err] = ReadExcelInfo([
+        "GetMainTestScriptText",
+        [Comp_Shortname, list_selected_TestID],
+      ]);
+      log_tb.innerHTML += err;
+      tabs.innerHTML +=
+        button_tab_template.replace(/%ID%/g, Comp_Shortname) + "\r\n";
+      preview.innerHTML += pre_code_template
+        .replace(/%RELOAD_FUNC%/, "reload_MainTestScript")
+        .replace(/%ID%/g, Comp_Shortname)
+        .replace("%CODE%", MaintestscriptText.replace(/</g, "&lt;"));
+      const preview_tb = document.getElementById("preview_" + Comp_Shortname);
+      Prism.highlightElement(preview_tb);
+    }
     if (list_testcases.length > 0) {
       document.getElementById("btn_" + list_testcases[0]).click();
+    } else if (Comp_Shortname != "") {
+      document.getElementById("btn_" + Comp_Shortname).click();
     }
   }
 }
@@ -286,6 +318,7 @@ preview_btn.addEventListener("click", () => {
 
 generate_btn.addEventListener("click", () => {
   let err = "";
+  let is_mainTest_exist = false;
   try {
     let list_selected_TestID = [];
 
@@ -299,7 +332,8 @@ generate_btn.addEventListener("click", () => {
       lst_items_gentoPath_dropbox,
       gento_path.value.toString()
     );
-
+    if (Comp_Shortname != "" && document.getElementById(Comp_Shortname).checked)
+      is_mainTest_exist = true;
     list_testcases.forEach((test) => {
       if (document.getElementById(test).checked) {
         list_selected_TestID.push(test);
@@ -314,6 +348,12 @@ generate_btn.addEventListener("click", () => {
       "GenerateTestscripts",
       [list_testcases, list_selected_TestID, gento_path.value],
     ]);
+    if (is_mainTest_exist) {
+      err += ReadExcelInfo([
+        "GenerateMainTestscript",
+        [list_selected_TestID, gento_path.value],
+      ]);
+    }
     log_tb.innerHTML = "Generated in " + gento_path.value + "\r\n";
     console.log(err);
     log_tb.innerHTML += err;
@@ -382,6 +422,26 @@ function reload_OneTestScript(tabcontent_ID) {
   log_tb.innerHTML += err;
 }
 
+function reload_MainTestScript(tabcontent_ID) {
+  let TestID = tabcontent_ID.replace("_tab", "");
+  let code_id = "preview_" + TestID;
+  const codeEl = document.getElementById(code_id);
+  let list_selected_TestID = [];
+  list_testcases.forEach((test) => {
+    if (document.getElementById(test).checked) {
+      list_selected_TestID.push(test);
+    }
+  });
+  let [MaintestscriptText, err] = ReadExcelInfo([
+    "GetMainTestScriptText",
+    [Comp_Shortname, list_selected_TestID],
+  ]);
+  codeEl.innerHTML = MaintestscriptText.replace(/</g, "&lt;");
+  Prism.highlightElement(codeEl);
+  log_tb.innerHTML = "Reload " + TestID + " Done!!\r\n";
+  log_tb.innerHTML += err;
+}
+
 function Resize() {
   let body_contain = document.getElementById("body_contain");
   let display = document.getElementById("display");
@@ -434,6 +494,7 @@ function CheckHover_Dropdowncontainer(Isin) {
 window.Resize = Resize;
 window.openTab = openTab;
 window.reload_OneTestScript = reload_OneTestScript;
+window.reload_MainTestScript = reload_MainTestScript;
 window.select_dropboxItem = select_dropboxItem;
 window.CheckHover_Dropdowncontainer = CheckHover_Dropdowncontainer;
 
