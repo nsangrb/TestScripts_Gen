@@ -196,7 +196,6 @@ browseExcelPath_btn.addEventListener("click", () => {
     })
     .then((result) => {
       if (result && result.canceled === false) {
-        Resize();
         excel_path.value = result.filePaths;
         UpdateExcelInfo(excel_path.value);
         let gento = ReadExcelInfo(["GetPathGenerateTo"]);
