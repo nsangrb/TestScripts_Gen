@@ -12,7 +12,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload_dark.js"),
     },
   });
 
@@ -25,7 +25,7 @@ function createWindow() {
     {
       label: "Menu",
       submenu: [
-        { label: "Theme", submenu: [{ label: "Dark" }, { label: "Light" }] },
+        // { label: "Theme", submenu: [{ label: "Dark" }, { label: "Light" }] },
         {
           label: "Toggle DevTools",
           accelerator: "Alt+Ctrl+D",
@@ -39,9 +39,11 @@ function createWindow() {
             const about = new BrowserWindow({
               width: 300,
               height: 150,
-              frame: false,
+              title: "About",
+              // frame: false,
               resizable: false,
             });
+            about.removeMenu();
             about.loadFile("view/About_view.html");
           },
         },
