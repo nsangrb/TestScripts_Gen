@@ -38,9 +38,9 @@ function createWindow() {
           click() {
             const about = new BrowserWindow({
               width: 300,
-              height: 150,
+              height: 140,
               title: "About",
-              // frame: false,
+              parent: win,
               resizable: false,
             });
             about.removeMenu();
