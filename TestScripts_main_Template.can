@@ -27,8 +27,8 @@ void MainTest_%COMP%Tests() {
    -> the name of function must be only "MainTest" (so it be executable from TestSetup)
    -> include of this *.can must be commnented in "TestCases.can"
 */      
-    TestGroupBegin ("***%COMP%***", "Testcase related to %COMPONENT% component");
+    TestGroupBegin("***%COMP%***", "Testcase related to %COMPONENT% component");
 
 %TEST_IDS%    
-    TestGroupEnd ();
+    TestGroupEnd();
 }

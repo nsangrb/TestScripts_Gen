@@ -1,0 +1,679 @@
+html {
+  height: 100%;
+}
+
+.theme-dark {
+  --color-bodyfont: rgb(212, 209, 209);
+  --color-titlebarfont: rgb(184, 184, 184);
+  --color-placeholder: rgb(166, 166, 156);
+  --color-webkit-scrollbar: #5a5a5a;
+  --color-webkit-scrollbar-hover: #6e6e6e;
+  --color-control: rgb(37, 37, 38);
+  --backgroundcolor-dropdown-input: rgb(60, 60, 60);
+  --backgroundcolor-dropdown-input-focus: rgb(85, 85, 85);
+  --color-dropdown-input: rgb(212, 211, 211);
+  --background-dropdown-container: rgb(37, 37, 38);
+  --boxshadow-dropdown-container-1: rgba(0, 0, 0, 0.418);
+  --boxshadow-dropdown-container-2: rgba(0, 0, 0, 0.39);
+  --color-dropdown_container_item: rgb(138, 138, 138);
+  --backgroundcolor-dropdown_container_item-hover: rgb(122, 122, 122);
+  --color-dropdown_container_item-hover: rgb(218, 218, 218);
+  --color-preview-contain: rgba(24, 24, 24);
+  --color-log-contain: rgb(17, 17, 17);
+  --splitter-border: #686868a2;
+  --headline: rgb(124, 124, 124);
+  --color-drd-btn: rgb(88, 88, 88);
+  --color-drd-btn-hover: rgb(168, 168, 168);
+  --color-drd-btn-focus: rgb(168, 168, 168);
+  --backgroundcolor-drd-btn-focus: rgb(168, 168, 168);
+  --backgroundcolor-type-1-btn: rgb(83, 83, 83);
+  --backgroundcolor-type-1-btn-hover: rgb(141, 141, 141);
+  --color-type-1-btn: rgb(209, 208, 208);
+  --color-type-1-btn-hover: rgb(209, 208, 208);
+  --backgroundcolor-type-2-btn: #2195f37a;
+  --backgroundcolor-type-2-btn-hover: #53b2ffb7;
+  --color-type-2-btn: rgb(209, 208, 208);
+  --color-togglebutton-type-1: rgb(209, 208, 208);
+  --color-type-1-togglebtn-hover: rgb(255, 255, 255);
+  --color-togglebutton-type-2: rgb(255, 255, 255);
+  --background-togglebutton-type-2-hover: rgb(105, 105, 105);
+  --color-border-togglebutton-type-2: #2196f3a9;
+  --background-tab: rgba(24, 24, 24);
+  --background-tab-btn: rgb(37, 37, 38);
+  --color-tab-btn: rgb(165, 162, 162);
+  --background-tab-btn-hover: rgb(69, 70, 73);
+  --background-tab-btn-active: #2195f37a;
+  --color-tab-btn-active: rgb(245, 245, 245);
+  --background-reload: rgba(109, 110, 114, 0.082);
+  --color-reload: rgba(255, 255, 255, 0.082);
+  --background-reload-hover: rgba(109, 110, 114, 0.185);
+  --color-reload-hover: rgba(255, 255, 255, 0.521);
+}
+
+.theme-light {
+  --color-bodyfont: rgb(58, 58, 58);
+  --color-titlebarfont: rgb(78, 78, 78);
+  --color-placeholder: rgba(122, 122, 115, 0.87);
+  --color-webkit-scrollbar: #9c9c9cc2;
+  --color-webkit-scrollbar-hover: #9c9c9c;
+  --color-control: rgb(243, 243, 243);
+  --backgroundcolor-dropdown-input: rgb(228, 228, 228);
+  --backgroundcolor-dropdown-input-focus: rgb(221, 221, 221);
+  --color-dropdown-input: rgb(78, 78, 78);
+  --background-dropdown-container: rgb(223, 223, 223);
+  --boxshadow-dropdown-container-1: rgba(114, 114, 114, 0.418);
+  --boxshadow-dropdown-container-2: rgba(114, 114, 114, 0.39);
+  --color-dropdown_container_item: rgb(107, 107, 107);
+  --backgroundcolor-dropdown_container_item-hover: rgb(194, 194, 194);
+  --color-dropdown_container_item-hover: rgb(92, 92, 92);
+  --color-preview-contain: rgb(255, 255, 255);
+  --color-log-contain: rgb(255, 255, 255);
+  --splitter-border: #a7a7a7a2;
+  --headline: rgb(124, 124, 124);
+  --color-drd-btn: rgb(194, 194, 194);
+  --color-drd-btn-hover: rgb(65, 65, 65);
+  --color-drd-btn-focus: rgb(65, 65, 65);
+  --backgroundcolor-drd-btn-focus: rgb(182, 182, 182);
+  --backgroundcolor-type-1-btn: rgb(211, 211, 211);
+  --backgroundcolor-type-1-btn-hover: rgb(189, 189, 189);
+  --color-type-1-btn: rgb(83, 83, 83);
+  --color-type-1-btn-hover: rgb(255, 255, 255);
+  --backgroundcolor-type-2-btn: #0688f3d2;
+  --backgroundcolor-type-2-btn-hover: #0688f391;
+  --color-type-2-btn: rgb(255, 255, 255);
+  --color-togglebutton-type-1: rgb(83, 83, 83);
+  --color-type-1-togglebtn-hover: rgb(83, 83, 83);
+  --color-togglebutton-type-2: rgb(54, 54, 54);
+  --background-togglebutton-type-2-hover: rgb(207, 207, 207);
+  --color-border-togglebutton-type-2: #2196f3;
+  --background-tab: rgb(243, 243, 243);
+  --background-tab-btn: rgb(236, 236, 236);
+  --color-tab-btn: rgb(88, 88, 88);
+  --background-tab-btn-hover: rgb(204, 204, 204);
+  --background-tab-btn-active: #2196f3;
+  --color-tab-btn-active: rgb(245, 245, 245);
+  --background-reload: rgba(109, 110, 114, 0.034);
+  --color-reload: rgba(0, 0, 0, 0.082);
+  --background-reload-hover: rgba(109, 110, 114, 0.123);
+  --color-reload-hover: rgba(3, 3, 3, 0.521);
+}
+
+body {
+  color: var(--color-bodyfont);
+  font-family: "Calibri";
+  margin: 0;
+  cursor: default;
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer */
+  -khtml-user-select: none;
+  /* KHTML browsers (e.g. Konqueror) */
+  -webkit-user-select: none;
+  /* Chrome, Safari, and Opera */
+  -webkit-touch-callout: none;
+  /* Disable Android and iOS callouts*/
+}
+
+.titlebar,
+.titlebar > * {
+  font-family: Roboto, sans-serif;
+  font-size: 12.5px;
+  color: var(--color-titlebarfont);
+}
+
+.menu-item-icon {
+  display: none;
+}
+
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: var(--color-placeholder);
+  opacity: 1;
+  /* Firefox */
+}
+
+:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  color: var(--color-placeholder);
+}
+
+::-ms-input-placeholder {
+  /* Microsoft Edge */
+  color: var(--color-placeholder);
+}
+
+/* width */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Track */
+
+::-webkit-scrollbar-track {
+  background: none;
+}
+
+/* Handle */
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-webkit-scrollbar);
+}
+
+/* Handle on hover */
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-webkit-scrollbar-hover);
+}
+
+.body_contain {
+  width: 100%;
+  height: 99vh;
+  display: grid;
+  grid-template-columns: 300px 35px 1fr;
+}
+
+.Control {
+  position: relative;
+  padding-left: 12px;
+  padding-top: 5px;
+  background-color: var(--color-control);
+  width: 100%;
+  padding-right: 20px;
+  display: grid;
+  grid-template-rows: 136px 1fr 40px;
+}
+
+.selection {
+  position: relative;
+  padding-bottom: 5px;
+}
+
+.selection_row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  padding-bottom: 5px;
+}
+
+.dropdownlist {
+  display: grid;
+  grid-template-columns: auto 30px;
+}
+
+.dropdown_input {
+  position: relative;
+  background-color: var(--backgroundcolor-dropdown-input);
+  color: var(--color-dropdown-input);
+  box-sizing: border-box;
+  background-repeat: no-repeat;
+  font-size: 13px;
+  border: none;
+  width: 100%;
+  height: 25px;
+  outline: none;
+}
+
+.dropdown_input:focus {
+  background-color: var(--backgroundcolor-dropdown-input-focus);
+}
+
+.dropdown_container {
+  display: none;
+  z-index: 999;
+  position: absolute;
+  width: calc(100% - 42px);
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--background-dropdown-container);
+  box-shadow: 0 4px 8px 0 var(--boxshadow-dropdown-container-1),
+    0 6px 10px 0 var(--boxshadow-dropdown-container-2);
+  padding: 5px;
+}
+
+.dropdown_container_item {
+  white-space: nowrap;
+  overflow-x: hidden;
+  color: var(--color-dropdown_container_item);
+}
+
+.dropdown_container_item:hover {
+  background: var(--backgroundcolor-dropdown_container_item-hover);
+  color: var(--color-dropdown_container_item-hover);
+}
+
+.Test_ID {
+  position: relative;
+  display: grid;
+  grid-template-rows: 36.5px 35px 1fr;
+}
+
+.button_row {
+  height: 25px;
+  display: grid;
+  outline: none;
+}
+
+.List_TestID {
+  position: relative;
+  margin-top: 3px;
+  overflow: hidden;
+}
+
+.List_TestID:hover {
+  overflow: auto;
+}
+
+.display {
+  display: grid;
+  grid-template-rows: 70% 5px 1fr;
+  -moz-user-select: text;
+  /* Firefox */
+  -ms-user-select: text;
+  /* Internet Explorer */
+  -khtml-user-select: text;
+  /* KHTML browsers (e.g. Konqueror) */
+  -webkit-user-select: text;
+  /* Chrome, Safari, and Opera */
+  -webkit-touch-callout: text;
+  /* Disable Android and iOS callouts*/
+}
+
+.preview_contain {
+  background-color: var(--color-preview-contain);
+  display: grid;
+  grid-template-rows: 40px 1fr;
+}
+
+.preview {
+  padding-top: 10px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.preview:hover {
+  overflow: auto;
+}
+
+.log_contain {
+  padding-left: 15px;
+  background-color: var(--color-log-contain);
+  overflow: hidden;
+}
+
+.log_contain:hover {
+  overflow: auto;
+}
+
+.column_splitter {
+  background-color: var(--color-control);
+  border-right: 1px solid var(--splitter-boder);
+  margin-left: 30px;
+}
+
+.column_splitter:hover {
+  cursor: col-resize;
+}
+
+.row_splitter {
+  background-color: var(--color-log-contain);
+  border-top: 1px solid var(--splitter-border);
+}
+
+.row_splitter:hover {
+  cursor: row-resize;
+}
+
+.div_headline {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 0.75rem;
+  color: var(--headline);
+  text-align: left;
+}
+
+/* Button */
+
+.drd_btn {
+  height: 25px;
+  width: 28px;
+  background: var(--backgroundcolor-dropdown-input);
+  color: var(--color-drd-btn);
+  outline: none;
+  border: none;
+  display: block;
+  font-family: "Segoe MDL2 Assets";
+}
+
+.drd_btn:hover {
+  color: var(--color-drd-btn-hover);
+}
+
+.drd_btn:focus {
+  color: var(--color-drd-btn-focus);
+  background: var(--backgroundcolor-drd-btn-focus);
+}
+
+.type1_button {
+  height: 25px;
+  width: 100%;
+  background: var(--backgroundcolor-type-1-btn);
+  color: var(--color-type-1-btn);
+  outline: none;
+  border: none;
+  display: flex;
+  font-size: small;
+  align-items: center;
+  justify-content: center;
+}
+
+.type1_button:hover {
+  background: var(--backgroundcolor-type-1-btn-hover);
+  color: var(--color-type-1-btn-hover);
+}
+
+.type2_button {
+  height: 25px;
+  width: 100%;
+  background: var(--backgroundcolor-type-2-btn);
+  color: var(--color-type-2-btn);
+  outline: none;
+  border: none;
+  display: flex;
+  font-size: small;
+  align-items: center;
+  justify-content: center;
+}
+
+.type2_button:hover {
+  background: var(--backgroundcolor-type-2-btn-hover);
+}
+
+/*Toggle Button*/
+
+.togglebutton_type1 {
+  height: 25px;
+  width: 71px;
+  background: var(--backgroundcolor-type-1-btn);
+  color: var(--color-togglebutton-type-1);
+  outline: none;
+  border: none;
+  display: flex;
+  font-size: small;
+  align-items: center;
+  justify-content: center;
+}
+
+.togglebutton_type1 input {
+  position: absolute;
+  opacity: 0;
+}
+
+.checkmark_type1 {
+  position: absolute;
+  right: 0;
+  height: 25px;
+  width: 5px;
+  background-color: none;
+}
+
+/* On mouse-over, add a grey background color */
+
+.togglebutton_type1:hover {
+  background-color: var(--backgroundcolor-type-1-btn-hover);
+  color: var(--color-type-1-togglebtn-hover);
+}
+
+/* When the checkbox is checked, add a blue background */
+
+.togglebutton_type1 input:checked ~ .checkmark_type1 {
+  background-color: #2196f3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+
+.checkmark_type1:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+
+.togglebutton_type1 input:checked ~ .checkmark_type1:after {
+  display: block;
+}
+
+.togglebutton_type2 {
+  position: relative;
+  display: flex;
+  text-align: left;
+  line-height: 1.8rem;
+  font-size: 0.8rem;
+  cursor: default;
+  user-select: none;
+  background: none;
+  outline: none;
+  font-size: large;
+  height: 30px;
+  padding-left: 20px;
+  color: var(--color-togglebutton-type-2);
+}
+
+.togglebutton_type2 input {
+  position: relative;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkmark_type2 {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  background-color: none;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+  border-left: 12px solid none;
+  margin-bottom: 3px;
+}
+
+/* On mouse-over, add a grey background color */
+
+.togglebutton_type2:hover {
+  background: var(--background-togglebutton-type-2-hover);
+}
+
+/* When the checkbox is checked, add a blue background */
+
+.togglebutton_type2 input:checked ~ .checkmark_type2 {
+  border-left: 12px solid var(--color-border-togglebutton-type-2);
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+
+.checkmark_type2:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+
+.togglebutton_type2 input:checked ~ .checkmark_type2:after {
+  display: block;
+}
+
+/* Tab */
+
+/* Style the tab */
+
+.tab {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  background-color: var(--background-tab);
+  height: 35px;
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer */
+  -khtml-user-select: none;
+  /* KHTML browsers (e.g. Konqueror) */
+  -webkit-user-select: none;
+  /* Chrome, Safari, and Opera */
+  -webkit-touch-callout: none;
+  /* Disable Android and iOS callouts*/
+}
+
+.tab:hover {
+  overflow: overlay;
+}
+
+/* Style the buttons that are used to open the tab content */
+
+.tab button {
+  height: 35px;
+  background: var(--background-tab-btn);
+  color: var(--color-tab-btn);
+  outline: none;
+  border: none;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+}
+
+/* Change background color of buttons on hover */
+
+.tab button:hover {
+  background-color: var(--background-tab-btn-hover);
+}
+
+/* Create an active/current tablink class */
+
+.tab button.active {
+  background-color: var(--background-tab-btn-active);
+  color: var(--color-tab-btn-active);
+}
+
+/* Style the tab content */
+
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  cursor: auto;
+  -webkit-animation: fadeEffect 0.7s;
+  animation: fadeEffect 0.7s;
+}
+
+/* Style the reload button */
+
+.topleft {
+  float: left;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: Segoe MDL2 Assets;
+  position: fixed;
+  z-index: 99;
+  margin-left: -5px;
+  margin-top: -13px;
+  background-color: var(--background-reload);
+  color: var(--color-reload);
+  padding: 0.4rem;
+}
+
+.topleft:hover {
+  background-color: var(--background-reload-hover);
+  color: var(--color-reload-hover);
+  -webkit-animation: fadeEffect 0.5s;
+  animation: fadeEffect 0.5s;
+}
+
+/* Fade in tabs */
+
+@-webkit-keyframes fadeEffect {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeEffect {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*Slider*/
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  margin-top: 3px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

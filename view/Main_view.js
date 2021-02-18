@@ -7,6 +7,9 @@ import {
 const Split = require("split-grid");
 const fs = require("fs");
 const { dialog } = require("electron").remote;
+const customTitlebar = require("custom-electron-titlebar");
+const url = require("url");
+const path = require("path");
 //#endregion
 
 //#region Declare variables
@@ -60,6 +63,7 @@ const log_tb = document.getElementById("log_tb");
 const tabs = document.getElementById("tabs");
 const preview_btn = document.getElementById("preview_btn");
 const preview = document.getElementById("preview");
+const darkmode = document.getElementById("darkmode_toggle");
 
 //Global variables for js
 let list_testcases = [];
@@ -67,6 +71,10 @@ let Comp_Shortname = "";
 let lst_items_excelPath_dropbox = [];
 let lst_items_gentoPath_dropbox = [];
 let IsInDropdown = false;
+let titlebar = new customTitlebar.Titlebar({
+  icon: "../assets/img/icon.ico",
+  itemBackgroundColor: customTitlebar.Color.fromHex("#2195f3a9"),
+});
 
 //#endregion
 
@@ -406,6 +414,14 @@ selectall_btn.addEventListener("click", () => {
   } catch (e) {}
 });
 
+darkmode.addEventListener("change", () => {
+  if (darkmode.checked) {
+    setTheme("theme-dark");
+  } else {
+    setTheme("theme-light");
+  }
+});
+
 function reload_OneTestScript(tabcontent_ID) {
   let TestID = tabcontent_ID.replace("_tab", "");
   let code_id = "preview_" + TestID;
@@ -489,6 +505,29 @@ function select_dropboxItem(item_title, selecteditem) {
 function CheckHover_Dropdowncontainer(Isin) {
   IsInDropdown = Isin;
 }
+
+function setTheme(themeName) {
+  localStorage.setItem("theme", themeName);
+  document.documentElement.className = themeName;
+  if (themeName === "theme-light")
+    titlebar.updateBackground(customTitlebar.Color.fromHex("#ffffff"));
+  else titlebar.updateBackground(customTitlebar.Color.fromHex("#252526"));
+}
+
+// function to toggle between light and dark theme
+function initTheme() {
+  if (localStorage.getItem("theme") === "theme-dark") {
+    setTheme("theme-dark");
+    darkmode.checked = true;
+  } else {
+    setTheme("theme-light");
+    darkmode.checked = false;
+  }
+}
+
+// Immediately invoked function on initial load
+Resize();
+initTheme();
 
 //Subcribes for using funcs in html view
 window.Resize = Resize;

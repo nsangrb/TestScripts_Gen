@@ -12,14 +12,10 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      preload: path.join(__dirname, "preload_dark.js"),
     },
   });
 
   win.loadFile("view/Main_view.html");
-
-  //Open the DevTools.
-  // win.webContents.openDevTools();
 
   var menu = Menu.buildFromTemplate([
     {
@@ -40,6 +36,8 @@ function createWindow() {
               width: 300,
               height: 140,
               title: "About",
+              minimizable: false,
+              icon: "./assets/img/icon.ico",
               parent: win,
               resizable: false,
             });
