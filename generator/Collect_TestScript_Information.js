@@ -2,7 +2,9 @@ const { readFile, utils } = require("xlsx");
 
 import {
   TestScript,
-  Genarate_TestScript,
+  Generate_TestScript,
+  MainTestScript,
+  Generate_MainTestScript,
   Update_Dict,
   Update_OverviewInfo,
 } from "./Generator.js";
@@ -207,6 +209,16 @@ function GetPathGenerateTo() {
   return lst["Output"];
 }
 
+function GetCompShortName() {
+  var old_ref = ExcelInfo["Overview"]["!ref"].split(":");
+  ExcelInfo["Overview"]["!ref"] = "B3:C12";
+  let lst = Get_OverviewInfo(
+    utils.sheet_to_csv(ExcelInfo["Overview"], { blankrows: false })
+  );
+  ExcelInfo["Overview"]["!ref"] = old_ref.join(":");
+  return [lst["Component Shortcut"]];
+}
+
 function GetInfo(lst_testID) {
   let Grouped_TestID_Content = Get_TestScripts(
     utils.sheet_to_json(ExcelInfo["TestSpec"]),
@@ -248,25 +260,25 @@ function GetInfo(lst_testID) {
   );
 
   ExcelInfo["Overview"]["!ref"] = ["A16", old_ref_overview[1]].join(":");
-  let data_overview = utils.sheet_to_json(ExcelInfo["Overview"], {
+  let data_regression = utils.sheet_to_json(ExcelInfo["Overview"], {
     raw: false,
   });
   ExcelInfo["Overview"]["!ref"] = old_ref_overview.join(":");
   let data_requirement = utils.sheet_to_json(ExcelInfo["Requirements"]);
-  return [Grouped_TestID_Content, data_overview, data_requirement];
+  return [Grouped_TestID_Content, data_regression, data_requirement];
 }
 
 function GetAllTestScriptText(lst_testID) {
   let lst_testscripts = [];
   let err = "";
-  let [Grouped_TestID_Content, data_overview, data_requirement] = GetInfo(
+  let [Grouped_TestID_Content, data_regression, data_requirement] = GetInfo(
     lst_testID
   );
   lst_testID.forEach((el) => {
     let [testscript, tmp_err] = TestScript(
       el,
       Grouped_TestID_Content,
-      data_overview,
+      data_regression,
       data_requirement
     );
     lst_testscripts[el] = testscript;
@@ -279,17 +291,37 @@ function GetAllTestScriptText(lst_testID) {
   return [lst_testscripts, err];
 }
 
+function GetOneTestScriptText(args) {
+  const [lst_testID, testID_gen] = args;
+  let err = "";
+  let [Grouped_TestID_Content, data_regression, data_requirement] = GetInfo(
+    lst_testID
+  );
+  let [testscript, tmp_err] = TestScript(
+    testID_gen,
+    Grouped_TestID_Content,
+    data_regression,
+    data_requirement
+  );
+  if (tmp_err != "") {
+    console.log(`${testID_gen}: \r\n${tmp_err}`);
+    err = `${testID_gen}: \r\n${tmp_err}\r\n`;
+  }
+
+  return [testscript, err];
+}
+
 function GenerateTestscripts(args) {
   const [lst_testID, lsi_testID_gen, Output] = args;
   let err = "";
-  let [Grouped_TestID_Content, data_overview, data_requirement] = GetInfo(
+  let [Grouped_TestID_Content, data_regression, data_requirement] = GetInfo(
     lst_testID
   );
   lsi_testID_gen.forEach((el) => {
-    let tmp_err = Genarate_TestScript(
+    let tmp_err = Generate_TestScript(
       el,
       Grouped_TestID_Content,
-      data_overview,
+      data_regression,
       data_requirement,
       Output
     );
@@ -302,22 +334,44 @@ function GenerateTestscripts(args) {
   return err;
 }
 
-function GetOneTestScriptText(args) {
-  const [lst_testID, testID_gen] = args;
+function GetMainTestScriptText(args) {
+  const [comp_shortname, testIDs_gen] = args;
   let err = "";
-  let [Grouped_TestID_Content, data_overview, data_requirement] = GetInfo(
-    lst_testID
+
+  let old_ref_overview = ExcelInfo["Overview"]["!ref"].split(":");
+  ExcelInfo["Overview"]["!ref"] = "B3:C12";
+  Update_OverviewInfo(
+    Get_OverviewInfo(
+      utils.sheet_to_csv(ExcelInfo["Overview"], { blankrows: false })
+    )
   );
-  let [testscript, tmp_err] = TestScript(
-    testID_gen,
-    Grouped_TestID_Content,
-    data_overview,
-    data_requirement
-  );
+
+  ExcelInfo["Overview"]["!ref"] = old_ref_overview.join(":");
+  let [maintestscript, tmp_err] = MainTestScript(testIDs_gen);
   if (tmp_err != "") {
-    console.log(`${testID_gen}: \r\n${tmp_err}`);
-    err = `${testID_gen}: \r\n${tmp_err}\r\n`;
+    console.log(`${comp_shortname}: \r\n${tmp_err}`);
+    err = `${comp_shortname}: \r\n${tmp_err}\r\n`;
   }
 
-  return [testscript, err];
+  return [maintestscript, err];
+}
+
+function GenerateMainTestscript(args) {
+  const [lsi_testID_gen, Output] = args;
+  let err = "";
+  let old_ref_overview = ExcelInfo["Overview"]["!ref"].split(":");
+  ExcelInfo["Overview"]["!ref"] = "B3:C12";
+  Update_OverviewInfo(
+    Get_OverviewInfo(
+      utils.sheet_to_csv(ExcelInfo["Overview"], { blankrows: false })
+    )
+  );
+  ExcelInfo["Overview"]["!ref"] = old_ref_overview.join(":");
+
+  err = Generate_MainTestScript(lsi_testID_gen, Output);
+  if (err != "") {
+    console.log(`${el}: \r\n${err}`);
+  }
+
+  return err;
 }
