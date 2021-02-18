@@ -1,0 +1,523 @@
+html {
+    height: 100%;
+  }
+  
+  body {
+    color: rgb(58, 58, 58);
+    font-family: "Calibri";
+    margin: 0;
+    cursor: default;
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer */
+    -khtml-user-select: none;
+    /* KHTML browsers (e.g. Konqueror) */
+    -webkit-user-select: none;
+    /* Chrome, Safari, and Opera */
+    -webkit-touch-callout: none;
+    /* Disable Android and iOS callouts*/
+  }
+  
+  .titlebar,
+  .titlebar > * {
+    font-family: Roboto, sans-serif;
+    font-size: 12.5px;
+    color: rgb(109, 109, 109);
+    background-color: #f3f3f3;
+  }
+  
+  .menu-item-icon {
+    display: none;
+  }
+  
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: rgba(122, 122, 115, 0.87);
+    opacity: 1;
+    /* Firefox */
+  }
+  
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: rgba(122, 122, 115, 0.87);
+  }
+  
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: rgba(122, 122, 115, 0.87);
+  }
+  
+  /* width */
+  
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  /* Track */
+  
+  ::-webkit-scrollbar-track {
+    background: none;
+  }
+  
+  /* Handle */
+  
+  ::-webkit-scrollbar-thumb {
+    background: #9c9c9cc2;
+  }
+  
+  /* Handle on hover */
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9c9c9cc2;
+  }
+  
+  .body_contain {
+    width: 100%;
+    height: 99vh;
+    display: grid;
+    grid-template-columns: 300px 35px 1fr;
+  }
+  
+  .Control {
+    position: relative;
+    padding-left: 12px;
+    padding-top: 5px;
+    background-color: rgb(243, 243, 243);
+    width: 100%;
+    padding-right: 20px;
+    display: grid;
+    grid-template-rows: 136px 1fr 40px;
+  }
+  
+  .selection {
+    position: relative;
+    padding-bottom: 5px;
+  }
+  
+  .selection_row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 30px;
+    padding-bottom: 5px;
+  }
+  
+  .dropdownlist {
+    display: grid;
+    grid-template-columns: auto 30px;
+  }
+  
+  .dropdown_input {
+    position: relative;
+    background-color: rgb(228, 228, 228);
+    color: rgb(78, 78, 78);
+    box-sizing: border-box;
+    background-repeat: no-repeat;
+    font-size: 13px;
+    border: none;
+    width: 100%;
+    height: 25px;
+    outline: none;
+  }
+  
+  .dropdown_input:focus {
+    background-color: rgb(221, 221, 221);
+  }
+  
+  .dropdown_container {
+    display: none;
+    z-index: 999;
+    position: absolute;
+    width: calc(100% - 42px);
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: rgb(223, 223, 223);
+    box-shadow: 0 4px 8px 0 rgba(114, 114, 114, 0.418), 0 6px 10px 0 rgba(114, 114, 114, 0.39);
+    padding: 5px;
+  }
+  
+  .dropdown_container_item {
+    white-space: nowrap;
+    overflow-x: hidden;
+    color: rgb(107, 107, 107);
+  }
+  
+  .dropdown_container_item:hover {
+    background: rgb(194, 194, 194);
+    color: rgb(92, 92, 92);
+  }
+  
+  .Test_ID {
+    position: relative;
+    display: grid;
+    grid-template-rows: 36.5px 35px 1fr;
+  }
+  
+  .button_row {
+    height: 25px;
+    display: grid;
+    outline: none;
+  }
+  
+  .List_TestID {
+    position: relative;
+    margin-top: 3px;
+    overflow: hidden;
+  }
+  
+  .List_TestID:hover {
+    overflow: auto;
+  }
+  
+  .display {
+    display: grid;
+    grid-template-rows: 70% 5px 1fr;
+    -moz-user-select: text;
+    /* Firefox */
+    -ms-user-select: text;
+    /* Internet Explorer */
+    -khtml-user-select: text;
+    /* KHTML browsers (e.g. Konqueror) */
+    -webkit-user-select: text;
+    /* Chrome, Safari, and Opera */
+    -webkit-touch-callout: text;
+    /* Disable Android and iOS callouts*/
+  }
+  
+  .preview_contain {
+    background-color: rgb(255, 255, 255);
+    display: grid;
+    grid-template-rows: 40px 1fr;
+  }
+  
+  .preview {
+    padding-top: 10px;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  
+  .preview:hover {
+    overflow: auto;
+  }
+  
+  .log_contain {
+    padding-left: 15px;
+    background-color: rgb(255, 255, 255);
+    overflow: hidden;
+  }
+  
+  .log_contain:hover {
+    overflow: auto;
+  }
+  
+  .column_splitter {
+    background-color: rgb(243, 243, 243);
+    border-right: 1px solid #a7a7a7a2;
+    margin-left: 30px;
+  }
+  
+  .column_splitter:hover {
+    cursor: col-resize;
+  }
+  
+  .row_splitter {
+    background-color: rgb(255, 255, 255);
+    border-top: 1px solid #a7a7a7a2;
+  }
+  
+  .row_splitter:hover {
+    cursor: row-resize;
+  }
+  
+  .div_headline {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: rgb(117, 117, 117);
+    text-align: left;
+  }
+  
+  /* Button */
+  
+  .drd_btn {
+    height: 25px;
+    width: 28px;
+    background: rgb(228, 228, 228);
+    color: rgb(194, 194, 194);
+    outline: none;
+    border: none;
+    display: block;
+    font-family: "Segoe MDL2 Assets";
+  }
+  
+  .drd_btn:hover {
+    color: rgb(65, 65, 65);
+    /* background: rgb(105, 105, 105); */
+  }
+  
+  .drd_btn:focus {
+    color: rgb(65, 65, 65);
+    background: rgb(182, 182, 182);
+  }
+  
+  .type1_button {
+    height: 25px;
+    width: 100%;
+    background: rgb(211, 211, 211);
+    color: rgb(83, 83, 83);
+    outline: none;
+    border: none;
+    display: flex;
+    font-size: small;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .type1_button:hover {
+    background: rgb(189, 189, 189);
+    color: rgb(255, 255, 255);
+  }
+  
+  .type2_button {
+    height: 25px;
+    width: 100%;
+    background: #0688f3d2;
+    color: rgb(255, 255, 255);
+    outline: none;
+    border: none;
+    display: flex;
+    font-size: small;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .type2_button:hover {
+    background: #0688f391;
+  }
+  
+  /*Toggle Button*/
+  
+  .togglebutton_type1 {
+    height: 25px;
+    width: 71px;
+    background: rgb(209, 208, 208);
+    color: rgb(83, 83, 83);
+    outline: none;
+    border: none;
+    display: flex;
+    font-size: small;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .togglebutton_type1 input {
+    position: absolute;
+    opacity: 0;
+  }
+  
+  .checkmark_type1 {
+    position: absolute;
+    right: 0;
+    height: 25px;
+    width: 5px;
+    background-color: none;
+  }
+  
+  /* On mouse-over, add a grey background color */
+  
+  .togglebutton_type1:hover {
+    background: rgb(189, 189, 189);
+    color: rgb(255, 255, 255);
+  }
+  
+  /* When the checkbox is checked, add a blue background */
+  
+  .togglebutton_type1 input:checked ~ .checkmark_type1 {
+    background-color: #2196f3;
+  }
+  
+  /* Create the checkmark/indicator (hidden when not checked) */
+  
+  .checkmark_type1:after {
+    content: "";
+    position: absolute;
+    display: none;
+  }
+  
+  /* Show the checkmark when checked */
+  
+  .togglebutton_type1 input:checked ~ .checkmark_type1:after {
+    display: block;
+  }
+  
+  .togglebutton_type2 {
+    position: relative;
+    display: flex;
+    text-align: left;
+    line-height: 1.8rem;
+    font-size: 0.8rem;
+    cursor: default;
+    user-select: none;
+    background: none;
+    outline: none;
+    font-size: large;
+    height: 30px;
+    padding-left: 20px;
+    color: rgb(54, 54, 54);
+  }
+  
+  .togglebutton_type2 input {
+    position: relative;
+    opacity: 0;
+    height: 0;
+    width: 0;
+  }
+  
+  .checkmark_type2 {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 0;
+    background-color: none;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    border-left: 12px solid none;
+    margin-bottom: 3px;
+  }
+  
+  /* On mouse-over, add a grey background color */
+  
+  .togglebutton_type2:hover {
+    background: rgb(207, 207, 207);
+  }
+  
+  /* When the checkbox is checked, add a blue background */
+  
+  .togglebutton_type2 input:checked ~ .checkmark_type2 {
+    border-left: 12px solid #2196f3;
+  }
+  
+  /* Create the checkmark/indicator (hidden when not checked) */
+  
+  .checkmark_type2:after {
+    content: "";
+    position: absolute;
+    display: none;
+  }
+  
+  /* Show the checkmark when checked */
+  
+  .togglebutton_type2 input:checked ~ .checkmark_type2:after {
+    display: block;
+  }
+  
+  /* Tab */
+  
+  /* Style the tab */
+  
+  .tab {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    background-color: rgb(243, 243, 243);
+    height: 35px;
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer */
+    -khtml-user-select: none;
+    /* KHTML browsers (e.g. Konqueror) */
+    -webkit-user-select: none;
+    /* Chrome, Safari, and Opera */
+    -webkit-touch-callout: none;
+    /* Disable Android and iOS callouts*/
+  }
+  
+  .tab:hover {
+    overflow: overlay;
+  }
+  
+  /* Style the buttons that are used to open the tab content */
+  
+  .tab button {
+    height: 35px;
+    background: rgb(236, 236, 236);
+    color: rgb(88, 88, 88);
+    outline: none;
+    border: none;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+  }
+  
+  /* Change background color of buttons on hover */
+  
+  .tab button:hover {
+    background-color: rgb(204, 204, 204);
+  }
+  
+  /* Create an active/current tablink class */
+  
+  .tab button.active {
+    background-color: #2196f3;
+    color: rgb(245, 245, 245);
+  }
+  
+  /* Style the tab content */
+  
+  .tabcontent {
+    display: none;
+    padding: 6px 12px;
+    cursor: auto;
+    -webkit-animation: fadeEffect 0.7s;
+    animation: fadeEffect 0.7s;
+  }
+  
+  /* Style the reload button */
+  
+  .topleft {
+    float: left;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: Segoe MDL2 Assets;
+    position: fixed;
+    z-index: 99;
+    margin-left: -5px;
+    margin-top: -13px;
+    background-color: rgba(109, 110, 114, 0.034);
+    color: rgba(0, 0, 0, 0.082);
+    padding: 0.4rem;
+  }
+  
+  .topleft:hover {
+    background-color: rgba(109, 110, 114, 0.123);
+    color: rgba(3, 3, 3, 0.521);
+    -webkit-animation: fadeEffect 0.5s;
+    animation: fadeEffect 0.5s;
+  }
+  
+  /* Fade in tabs */
+  
+  @-webkit-keyframes fadeEffect {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeEffect {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
