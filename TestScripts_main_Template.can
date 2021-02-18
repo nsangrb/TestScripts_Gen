@@ -1,0 +1,34 @@
+/*@!Encoding:1252*/
+includes
+{
+%INCLUDES%}
+
+///@cond DoxyComp
+variables
+{
+///@endcond
+   
+
+///@cond DoxyComp    
+}
+///@endcond
+
+/**
+Main function called by CANoe when test module is started. Contains:
+
+@li setting of SUT labels
+@li initialization and deinitialization of TCP communication
+@li testcase sequence
+
+@todo readout sw labels automatically via diagnosis
+*/
+void MainTest_%COMP%Tests() {
+/* -> is used only if tester want to make a report only on this feature.
+   -> the name of function must be only "MainTest" (so it be executable from TestSetup)
+   -> include of this *.can must be commnented in "TestCases.can"
+*/      
+    TestGroupBegin ("***%COMP%***", "Testcase related to %COMPONENT% component");
+
+%TEST_IDS%    
+    TestGroupEnd ();
+}
