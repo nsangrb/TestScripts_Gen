@@ -72,7 +72,7 @@ let lst_items_excelPath_dropbox = [];
 let lst_items_gentoPath_dropbox = [];
 let IsInDropdown = false;
 let titlebar = new customTitlebar.Titlebar({
-  icon: "../assets/img/icon.ico",
+  icon: "../assets/img/icon_2.ico",
   itemBackgroundColor: customTitlebar.Color.fromHex("#2195f3a9"),
 });
 

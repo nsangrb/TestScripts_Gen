@@ -37,7 +37,7 @@ function createWindow() {
               height: 140,
               title: "About",
               minimizable: false,
-              icon: "./assets/img/icon.ico",
+              icon: "./assets/img/icon_2.ico",
               parent: win,
               resizable: false,
             });
