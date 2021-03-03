@@ -300,7 +300,11 @@ function generate_func(element, Dict, variables_defined, tabs) {
   if (IsDefined(element[Test_Descr])) {
     Testgen = `${tabs}func_testStepSubSection("${element[Test_Descr]}");\r\n`;
   }
-  if (element[Directive].toLowerCase() === "endfor")
+  if (
+    ["endfor", "endif", "else", "elseif"].includes(
+      element[Directive].toLowerCase()
+    )
+  )
     tabs = tabs.replace("\t", "");
   if (IsDefined(Dict["Comment"])) {
     let spl_str = Dict["Comment"].split("|");
@@ -325,7 +329,10 @@ function generate_func(element, Dict, variables_defined, tabs) {
     );
   });
   Testgen += tabs + function_template + "\r\n";
-  if (element[Directive].toLowerCase() === "for") tabs += "\t";
+  if (
+    ["for", "if", "else", "elseif"].includes(element[Directive].toLowerCase())
+  )
+    tabs += "\t";
   return [Testgen, internal_variables, tabs];
 }
 
