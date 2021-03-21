@@ -164,7 +164,16 @@ function xlstojson_custom(sheet, startline_csv, endline_csv) {
       let json = [];
       for (var index in headline_arr) {
         let line_arr = el.split("♫");
-        if (line_arr[index] != "") json[headline_arr[index]] = line_arr[index];
+        if (line_arr[index] != "") {
+          if (headline_arr[index] === "PATTERN") {
+            json[headline_arr[index]] = line_arr[index]
+              .replace(/^\"/, "")
+              .replace(/\"$/, "")
+              .replace(/\"\"/g, '"');
+          } else {
+            json[headline_arr[index]] = line_arr[index];
+          }
+        }
       }
       final_json.push(json);
     });

@@ -269,7 +269,7 @@ function Find_match_dict(data) {
   }
   return `Line ${data[Line]}: Directive "${data[Directive]}" NOT match with Help sheet`;
 }
-function generate_var(element, Dict, variables, tabs) {
+function generate_var(element, Dict, variables) {
   let global_variables = "";
   let internal_variables = "";
   if (!variables.includes(element[Signal1])) variables.push(element[Signal1]);
@@ -285,9 +285,9 @@ function generate_var(element, Dict, variables, tabs) {
       .join(element[field]);
   });
   if (element[Options] === "global") {
-    global_variables = tabs + variable_template + "\r\n";
+    global_variables = `\t${variable_template}\r\n`;
   } else if (element[Options] === "internal") {
-    internal_variables = tabs + variable_template + "\r\n";
+    internal_variables = `\t${variable_template}\r\n`;
   } else {
     return `Line ${element[Line]}: Please choose correct "Options" for Variable "${element[Signal1]}"\r\n`;
   }
@@ -301,7 +301,7 @@ function generate_func(element, Dict, variables_defined, tabs) {
     Testgen = `${tabs}func_testStepSubSection("${element[Test_Descr]}");\r\n`;
   }
   if (
-    ["endfor", "endif", "else", "elseif"].includes(
+    ["end", "endwihle", "endfor", "endif", "else", "elseif"].includes(
       element[Directive].toLowerCase()
     )
   )
@@ -330,7 +330,9 @@ function generate_func(element, Dict, variables_defined, tabs) {
   });
   Testgen += tabs + function_template + "\r\n";
   if (
-    ["for", "if", "else", "elseif"].includes(element[Directive].toLowerCase())
+    ["while", "for", "if", "else", "elseif"].includes(
+      element[Directive].toLowerCase()
+    )
   )
     tabs += "\t";
   return [Testgen, internal_variables, tabs];
@@ -773,12 +775,7 @@ function testcase_gen(data, key, variables_defined) {
     }
     [Dict_Result, type] = Find_Result;
     if (type === "Vars") {
-      let Var_result = generate_var(
-        element,
-        Dict_Result,
-        variables_defined,
-        tabs
-      );
+      let Var_result = generate_var(element, Dict_Result, variables_defined);
       if (IsString(Var_result)) {
         err += Var_result;
         continue;
