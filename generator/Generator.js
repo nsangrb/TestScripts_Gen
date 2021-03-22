@@ -311,12 +311,12 @@ function generate_func(element, Dict, variables_defined, tabs) {
     if (spl_str.length === 3) {
       if (!variables_defined.includes(element[Options])) {
         variables_defined.push(element[Options]);
-        internal_variables = `${tabs}${spl_str[1]} ${element[Options]};\r\n`;
+        internal_variables = `\t${spl_str[1]} ${element[Options]};\r\n`;
       }
     } else {
       if (!variables_defined.includes(spl_str[1])) {
         variables_defined.push(spl_str[1]);
-        internal_variables = `${tabs}${spl_str[2]} ${spl_str[1]};\r\n`;
+        internal_variables = `\t${spl_str[2]} ${spl_str[1]};\r\n`;
       }
     }
   }
