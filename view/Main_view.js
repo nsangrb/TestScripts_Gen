@@ -4,6 +4,10 @@ import {
   ReadExcelInfo,
 } from "../generator/Collect_TestScript_Information.js";
 
+import {
+  checkForDuplicates,
+} from "../generator/Other_Function.js";
+
 const Split = require("split-grid");
 const fs = require("fs");
 const { dialog } = require("electron").remote;
@@ -119,25 +123,36 @@ function Iuclude_path_Dropbox(dropbox_container, lstItems, path) {
 
 //Get list Testcase ID exist in Excel file
 function GetListTestID() {
+  let err = "";
   list_testcases = ReadExcelInfo(["GetListTestcase"]);
   Comp_Shortname = ReadExcelInfo(["GetCompShortName"]);
-
+  let list_existed_testID = [];
+  let Comp_Shortname_testID = "";
+  if (Comp_Shortname != "" && document.getElementById(Comp_Shortname) != null && document.getElementById(Comp_Shortname).checked) Comp_Shortname_testID = Comp_Shortname;
+  list_testcases.forEach(new_testcase => {
+    if (checkForDuplicates(list_testcases, new_testcase))
+    if (!err.includes(`Test ID: ${new_testcase} is duplicated.\r\n`)) err += `Test ID: ${new_testcase} is duplicated.\r\n`;
+    if (document.getElementById(new_testcase) != null && document.getElementById(new_testcase).checked) list_existed_testID.push(new_testcase);
+  });
   Remove_AllChildNodes(list_testID);
   if (Comp_Shortname != "") {
-    list_testID.appendChild(CreateTestID_Element(Comp_Shortname));
+    let is_checked = Comp_Shortname_testID != "";
+    list_testID.appendChild(CreateTestID_Element(Comp_Shortname, is_checked));
   }
   list_testcases.forEach((item) => {
-    list_testID.appendChild(CreateTestID_Element(item));
+    let is_checked = list_existed_testID.includes(item);
+    list_testID.appendChild(CreateTestID_Element(item, is_checked));
   });
+  return err;
 }
 
-function CreateTestID_Element(item) {
+function CreateTestID_Element(item, is_checked) {
   let label = document.createElement("label");
   label.classList.add("togglebutton_type2");
   label.textContent = item;
   let input = document.createElement("input");
   input.type = "checkbox";
-  input.checked = true;
+  input.checked = is_checked;
   input.id = item;
   let span = document.createElement("span");
   span.classList.add("checkmark_type2");
@@ -233,6 +248,17 @@ browseExcelPath_btn.addEventListener("click", () => {
     .showOpenDialog({
       properties: ["openFile"],
       defaultPath: excel_path.value,
+      filters:
+      [
+        {
+          name: "All",
+          extensions: ["*"]
+        },
+        {
+          name: "Excel file",
+          extensions: ["xls", "xlsx", "xlsm"]
+        }
+      ]
     })
     .then((result) => {
       if (result && result.canceled === false) {
@@ -240,7 +266,7 @@ browseExcelPath_btn.addEventListener("click", () => {
         UpdateExcelInfo(excel_path.value);
         let gento = ReadExcelInfo(["GetPathGenerateTo"]);
         gento_path.value = gento;
-        GetListTestID();
+        error += GetListTestID();
         preview_TestScripts();
 
         error += Iuclude_path_Dropbox(
@@ -388,7 +414,7 @@ reload_btn.addEventListener("click", () => {
     log_tb.innerHTML += error;
 
     UpdateExcelInfo(excel_path.value);
-    GetListTestID();
+    error += GetListTestID();
     preview_TestScripts();
   } catch (e) {
     console.log(e.stack);
