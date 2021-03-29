@@ -13,6 +13,7 @@ export {
   xlstojson_custom,
   IsString,
   Check_Array,
+  checkForDuplicates,
   IsNumber,
   IsPointer,
 };
@@ -111,6 +112,11 @@ function Check_Array(arr) {
   if (myArray === null) return [arr, 0];
   else return [myArray.groups.arr_name, myArray.groups.length];
 }
+
+function checkForDuplicates(array, keyValue) {
+  return array.filter(item => item === keyValue).length > 1;
+}
+
 function ReplaceGlobally(searchTxt, replaceTxt) {
   var str = this;
   if (!IsSameType)
