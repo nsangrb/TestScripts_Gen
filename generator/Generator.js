@@ -68,6 +68,7 @@ const List_replace_keywords = [
   "%NAME%",
   "%REQUIREMENT%",
   "%TEST_DESCR%",
+  "%TEST_DESIGN%",
   "%AUTHOR%",
   "%REPORT_PATH%",
   "%DATE%",
@@ -145,6 +146,25 @@ function testdescr_gen(data) {
     }
   }
   return [testdescr, err];
+}
+//#endregion
+
+//#region TEST DESIGN GENERATOR
+function testdesign_gen(data) {
+  let testdesign = "";
+  let err = "";
+  if (data.length > 1)
+    return [testdesign, "Testcase has to have only 1 test descr.\r\n"];
+  for (var index in data) {
+    let item = data[index];
+    if (IsDefined(item[Test_Descr])) {
+      testdesign += item[Test_Descr];
+    } else {
+      err += `Line ${item[Line]}: Please define Test design in field 'Test Step Descriptions and Comments'\r\n`;
+      continue;
+    }
+  }
+  return [testdesign, err];
 }
 //#endregion
 
@@ -282,7 +302,7 @@ function generate_var(element, Dict, variables) {
   fields.forEach((field) => {
     variable_template = variable_template
       .split("%" + field + "%")
-      .join(element[field]);
+      .join(element[field]).replace(/\r\n/g,"\r\t");
   });
   if (element[Options] === "global") {
     global_variables = `\t${variable_template}\r\n`;
@@ -313,7 +333,7 @@ function generate_func(element, Dict, variables_defined, tabs) {
         variables_defined.push(element[Options]);
         internal_variables = `\t${spl_str[1]} ${element[Options]};\r\n`;
       }
-    } else {
+    } else if (spl_str.length === 4){
       if (!variables_defined.includes(spl_str[1])) {
         variables_defined.push(spl_str[1]);
         internal_variables = `\t${spl_str[2]} ${spl_str[1]};\r\n`;
@@ -746,7 +766,10 @@ function testcase_gen(data, key, variables_defined) {
   for (var index in data[key]) {
     let element = data[key][index];
     if (!IsDefined(element[Directive])) {
-      err += `Line ${element[Line]}: Please define "Directive"\r\n`;
+      if (Object.keys(element).length > 1)
+        err += `Line ${element[Line]}: Please define "Directive"\r\n`;
+      else
+        Testgen += `\r\n`;
       continue;
     }
     if (element[Directive].toLowerCase() === "comment") {
@@ -869,6 +892,7 @@ function generate_with_testSpec_data(testID, data, List_gen) {
   const List_gen_funcs = {
     includes: includes_gen,
     testdescr: testdescr_gen,
+    testdesign: testdesign_gen,
     testmatrix_st: testmatrix_gen,
     testcase: testcase_gen,
   };
@@ -999,6 +1023,7 @@ function TestScript(testID, TestSpec_data, Regression_data, Req_data) {
     testID: testID,
     requirements: "",
     testdescr: "",
+    testdesign: "",
     author: List_Overview_Info["Author"],
     reportpath: path
       .join(List_Overview_Info["Report"], testID)
