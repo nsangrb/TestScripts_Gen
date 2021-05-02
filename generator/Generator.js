@@ -302,7 +302,7 @@ function generate_var(element, Dict, variables) {
   fields.forEach((field) => {
     variable_template = variable_template
       .split("%" + field + "%")
-      .join(element[field]).replace(/\r\n/g,"\r\t");
+      .join(element[field]).replace(/\r\n/g,"\r\t\t");
   });
   if (element[Options] === "global") {
     global_variables = `\t${variable_template}\r\n`;
