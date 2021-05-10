@@ -302,7 +302,8 @@ function generate_var(element, Dict, variables) {
   fields.forEach((field) => {
     variable_template = variable_template
       .split("%" + field + "%")
-      .join(element[field]).replace(/\r\n/g,"\r\t\t");
+      .join(element[field])
+      .replace(/\r\n/g, "\r\t\t");
   });
   if (element[Options] === "global") {
     global_variables = `\t${variable_template}\r\n`;
@@ -333,7 +334,7 @@ function generate_func(element, Dict, variables_defined, tabs) {
         variables_defined.push(element[Options]);
         internal_variables = `\t${spl_str[1]} ${element[Options]};\r\n`;
       }
-    } else if (spl_str.length === 4){
+    } else if (spl_str.length === 4) {
       if (!variables_defined.includes(spl_str[1])) {
         variables_defined.push(spl_str[1]);
         internal_variables = `\t${spl_str[2]} ${spl_str[1]};\r\n`;
@@ -768,8 +769,7 @@ function testcase_gen(data, key, variables_defined) {
     if (!IsDefined(element[Directive])) {
       if (Object.keys(element).length > 1)
         err += `Line ${element[Line]}: Please define "Directive"\r\n`;
-      else
-        Testgen += `\r\n`;
+      else Testgen += `\r\n`;
       continue;
     }
     if (element[Directive].toLowerCase() === "comment") {
