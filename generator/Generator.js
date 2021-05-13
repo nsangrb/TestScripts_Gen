@@ -630,6 +630,7 @@ function struct_gen(
   });
   for (var index in struct_info) {
     let el = struct_info[index];
+    let template_signal_tmp = template_signal;
     if (!IsDefined(el["DataType"])) {
       err = `  Please define enough DataType in Struct "${datatype}"\r\n`;
       return err;
@@ -646,8 +647,15 @@ function struct_gen(
     } else {
       exec_func = var_gen;
     }
+    if (IsPointer(el["Variable name"]))
+    {
+      template_signal_tmp =  `*(${template_signal_tmp.replace("%STRUCT_EL%", el["Variable name"].replace("*",""))})`;
+    }
+    else{
+      template_signal_tmp =  template_signal_tmp.replace("%STRUCT_EL%", el["Variable name"]);
+    }
     let result = exec_func(
-      template_signal.replace("%STRUCT_EL%", el["Variable name"]),
+      template_signal_tmp,
       el["DataType"],
       func,
       tabs,
