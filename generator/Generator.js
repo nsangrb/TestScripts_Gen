@@ -479,7 +479,7 @@ function var_gen(
   if (IsPointer(signal)) {
     snprintf_args = "(" + signal + ")";
   }
-  if (array_cnt > 1) {
+  if (!IsNumber(array_cnt) || array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
       internal_variables += `\tint arr_index_${index_level};\r\n`;
@@ -497,7 +497,7 @@ function var_gen(
     }
     vars += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
     vars += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
-    if (array_cnt > 1) {
+    if (!IsNumber(array_cnt) || array_cnt > 1) {
       tabs = tabs.replace("\t", "");
       vars += `${tabs}}\r\n`;
       index_level--;
@@ -554,7 +554,7 @@ function enum_gen(
   if (IsPointer(signal)) {
     snprintf_args = "(" + signal + ")";
   }
-  if (array_cnt > 1) {
+  if (!IsNumber(array_cnt) || array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
       internal_variables += `\tint arr_index_${index_level};\r\n`;
@@ -572,7 +572,7 @@ function enum_gen(
     }
     enums += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
     enums += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
-    if (array_cnt > 1) {
+    if (!IsNumber(array_cnt) || array_cnt > 1) {
       tabs = tabs.replace("\t", "");
       enums += `${tabs}}\r\n`;
       index_level--;
@@ -604,7 +604,7 @@ function struct_gen(
     template_signal = "(" + template_signal + ")";
   }
   let index_level = (tabs.match(/\t/g) || []).length - 1;
-  if (array_cnt > 0) {
+  if (!IsNumber(array_cnt) || array_cnt > 0) {
     let variable_index = `arr_index_${index_level}`;
     if (!variables_defined.includes(variable_index)) {
       variables_defined.push(variable_index);
@@ -675,7 +675,7 @@ function struct_gen(
     if (max_index < tmp_maxindex) max_index = tmp_maxindex;
   }
   struct += tabs.replace("\t", "");
-  if (array_cnt > 0) struct += "}\r\n";
+  if (!IsNumber(array_cnt) || array_cnt > 0) struct += "}\r\n";
   else struct += "\r\n";
   if (err != "") return err;
   return [struct, internal_variables, max_index];
