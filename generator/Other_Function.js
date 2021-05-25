@@ -107,7 +107,7 @@ function Upper_1st(str) {
 }
 
 function Check_Array(arr) {
-  let arr_regex = /(?<arr_name>.+)\[(?<length>[0-9]+)\]$/g;
+  let arr_regex = /(?<arr_name>.+)\[(?<length>[\w]+)\]$/g;
   var myArray = arr_regex.exec(arr);
   if (myArray === null) return [arr, 0];
   else return [myArray.groups.arr_name, myArray.groups.length];
