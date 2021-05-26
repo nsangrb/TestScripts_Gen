@@ -384,12 +384,11 @@ function generate_enum_array(variables_defined, enum_name) {
       internal_variables_arr.push(`\t\t${el["Value"]},\t//${el["Element"]}`);
     }
     if (zero_el != "") internal_variables_arr.push(zero_el);
-    internal_variables_arr[
-      internal_variables_arr.length - 1
-    ] = internal_variables_arr[internal_variables_arr.length - 1].replace(
-      ",",
-      " "
-    );
+    internal_variables_arr[internal_variables_arr.length - 1] =
+      internal_variables_arr[internal_variables_arr.length - 1].replace(
+        ",",
+        " "
+      );
     internal_variables += internal_variables_arr.join("\r\n") + "\r\n\t};\r\n";
   }
   return [internal_variables];
@@ -479,7 +478,7 @@ function var_gen(
   if (IsPointer(signal)) {
     snprintf_args = "(" + signal + ")";
   }
-  if (!IsNumber(array_cnt) || array_cnt > 1) {
+  if (array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
       internal_variables += `\tint arr_index_${index_level};\r\n`;
@@ -497,7 +496,7 @@ function var_gen(
     }
     vars += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
     vars += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
-    if (!IsNumber(array_cnt) || array_cnt > 1) {
+    if (array_cnt > 1) {
       tabs = tabs.replace("\t", "");
       vars += `${tabs}}\r\n`;
       index_level--;
@@ -554,7 +553,7 @@ function enum_gen(
   if (IsPointer(signal)) {
     snprintf_args = "(" + signal + ")";
   }
-  if (!IsNumber(array_cnt) || array_cnt > 1) {
+  if (array_cnt > 1) {
     if (!variables_defined.includes("arr_index_" + index_level)) {
       variables_defined.push("arr_index_" + index_level);
       internal_variables += `\tint arr_index_${index_level};\r\n`;
@@ -572,7 +571,7 @@ function enum_gen(
     }
     enums += `${tabs}snprintf(chTemp,1024,${snprintf_args});\r\n`;
     enums += `${tabs}${Function}(chTemp, ${value_compare});\r\n`;
-    if (!IsNumber(array_cnt) || array_cnt > 1) {
+    if (array_cnt > 1) {
       tabs = tabs.replace("\t", "");
       enums += `${tabs}}\r\n`;
       index_level--;
@@ -604,7 +603,7 @@ function struct_gen(
     template_signal = "(" + template_signal + ")";
   }
   let index_level = (tabs.match(/\t/g) || []).length - 1;
-  if (!IsNumber(array_cnt) || array_cnt > 0) {
+  if (array_cnt > 0) {
     let variable_index = `arr_index_${index_level}`;
     if (!variables_defined.includes(variable_index)) {
       variables_defined.push(variable_index);
@@ -647,12 +646,16 @@ function struct_gen(
     } else {
       exec_func = var_gen;
     }
-    if (IsPointer(el["Variable name"]))
-    {
-      template_signal_tmp =  `*(${template_signal_tmp.replace("%STRUCT_EL%", el["Variable name"].replace("*",""))})`;
-    }
-    else{
-      template_signal_tmp =  template_signal_tmp.replace("%STRUCT_EL%", el["Variable name"]);
+    if (IsPointer(el["Variable name"])) {
+      template_signal_tmp = `*(${template_signal_tmp.replace(
+        "%STRUCT_EL%",
+        el["Variable name"].replace("*", "")
+      )})`;
+    } else {
+      template_signal_tmp = template_signal_tmp.replace(
+        "%STRUCT_EL%",
+        el["Variable name"]
+      );
     }
     let result = exec_func(
       template_signal_tmp,
@@ -675,7 +678,7 @@ function struct_gen(
     if (max_index < tmp_maxindex) max_index = tmp_maxindex;
   }
   struct += tabs.replace("\t", "");
-  if (!IsNumber(array_cnt) || array_cnt > 0) struct += "}\r\n";
+  if (array_cnt > 0) struct += "}\r\n";
   else struct += "\r\n";
   if (err != "") return err;
   return [struct, internal_variables, max_index];
@@ -928,16 +931,12 @@ function generate_with_testSpec_data(testID, data, List_gen) {
       );
       List_gen[element] += tmp_generated;
     } else {
-      [
-        tmp_generated,
-        tmp_global_variables,
-        tmp_internal_variables,
-        tmp_error,
-      ] = List_gen_funcs["testcase"](
-        split_testscript_by_keywords,
-        element,
-        variables_defined
-      );
+      [tmp_generated, tmp_global_variables, tmp_internal_variables, tmp_error] =
+        List_gen_funcs["testcase"](
+          split_testscript_by_keywords,
+          element,
+          variables_defined
+        );
       tmp_generated = Testscript_split_region.ReplaceGlobally(
         ["%CASE%", "%TEST_SCRIPT%"],
         [element.toUpperCase(), tmp_generated]
